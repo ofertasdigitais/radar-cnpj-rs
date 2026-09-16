@@ -1,0 +1,49 @@
+services:
+  - type: web
+    name: radar-cnpj-rs
+    runtime: docker
+    plan: standard
+    healthCheckPath: /healthz
+    maxShutdownDelaySeconds: 300
+    envVars:
+      - key: RADAR_HOST
+        value: 0.0.0.0
+      - key: RADAR_DATA_DIR
+        value: /var/data
+      - key: RADAR_AUTO_SYNC
+        value: "1"
+      - key: RADAR_ADMIN_USER
+        sync: false
+      - key: RADAR_ADMIN_PASSWORD
+        sync: false
+      - key: RADAR_SESSION_SECRET
+        generateValue: true
+      - key: RADAR_SECURE_COOKIES
+        value: "1"
+      # Monitoramento diário oficial via Serpro/Conecta Gov.
+      # As credenciais são secretas e devem ser preenchidas no painel do Render.
+      - key: RADAR_SERPRO_AUTO_MONITOR
+        value: "1"
+      - key: RADAR_SERPRO_ENV
+        value: producao
+      - key: RADAR_SERPRO_CONSUMER_KEY
+        sync: false
+      - key: RADAR_SERPRO_CONSUMER_SECRET
+        sync: false
+      - key: RADAR_SERPRO_USER_CPF
+        sync: false
+      - key: RADAR_SERPRO_DAILY_LIMIT
+        value: "50"
+      - key: RADAR_SERPRO_MONITOR_DAYS
+        value: "30"
+      - key: RADAR_SERPRO_DAILY_HOUR
+        value: "6"
+      # Opcional: feed contratado para descoberta incremental de novos CNPJs.
+      - key: RADAR_DISCOVERY_URL
+        sync: false
+      - key: RADAR_DISCOVERY_TOKEN
+        sync: false
+    disk:
+      name: radar-data
+      mountPath: /var/data
+      sizeGB: 30

@@ -1,0 +1,12 @@
+{
+  "name": "Radar CNPJ RS",
+  "short_name": "Radar CNPJ",
+  "description": "Inteligência comercial sobre novos CNPJs no Rio Grande do Sul",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080a0e",
+  "theme_color": "#090b10",
+  "icons": [
+    {"src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}
+  ]
+}
