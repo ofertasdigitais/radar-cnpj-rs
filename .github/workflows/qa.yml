@@ -18,11 +18,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.0.0
         with:
           python-version: '3.12'
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: '24'
           cache: npm
@@ -32,7 +32,7 @@ jobs:
             cloudflare/package-lock.json
       - name: Dependências locais
         run: |
-          python -m pip install -r requirements.txt
+          python -m pip install -r requirements.txt -r requirements-capture.txt
           npm ci
           npm ci --prefix collector
           npm ci --prefix cloudflare

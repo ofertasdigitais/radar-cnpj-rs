@@ -28,6 +28,10 @@ edição comercial será feita posteriormente, não nesta entrega.
 - O gate do banco exige também perfis com proprietário; ausência de uma
   verificação obrigatória não é interpretada como sucesso. Quatro regressões
   novas cobrem esses gates.
+- O primeiro QA remoto detectou que seu ambiente limpo não instalava
+  `requirements-capture.txt` (osmium/shapely), embora estejam presentes na
+  máquina operacional. A instalação do CI e as instruções de QA agora incluem
+  essas dependências, sem pular testes do importador OSM.
 
 ## Validação local repetida
 

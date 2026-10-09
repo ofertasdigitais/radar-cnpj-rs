@@ -61,6 +61,8 @@ Os arquivos compilados da interface já ficam em `static/`.
 
 ```powershell
 python -m pip install -r requirements.txt
+# Para o importador OSM local e o QA completo, instale também:
+python -m pip install -r requirements-capture.txt
 # Em instalação nova, configure credenciais e segredo conforme .env.example.
 python app.py
 ```
@@ -108,6 +110,7 @@ use os iniciadores para preservar as credenciais protegidas e o banco.
 ## Repetir QA sem tocar a base funcional
 
 ```powershell
+python -m pip install -r requirements.txt -r requirements-capture.txt
 python -m unittest discover -s tests -q
 npm ci
 npm run build:react
