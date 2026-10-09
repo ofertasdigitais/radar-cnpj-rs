@@ -1,0 +1,35 @@
+Bundled license information:
+
+papaparse/papaparse.min.js:
+  /* @license
+  Papa Parse
+  v5.7.0
+  https://github.com/mholt/PapaParse
+  License: MIT
+  */
+
+lucide/dist/esm/defaultAttributes.mjs:
+lucide/dist/esm/createElement.mjs:
+lucide/dist/esm/shared/src/utils/mergeClasses.mjs:
+lucide/dist/esm/shared/src/utils/hasA11yProp.mjs:
+lucide/dist/esm/shared/src/utils/toCamelCase.mjs:
+lucide/dist/esm/shared/src/utils/toPascalCase.mjs:
+lucide/dist/esm/replaceElement.mjs:
+lucide/dist/esm/icons/building-complex.mjs:
+lucide/dist/esm/icons/chart-no-axes-combined.mjs:
+lucide/dist/esm/icons/layout-dashboard.mjs:
+lucide/dist/esm/icons/list-filter.mjs:
+lucide/dist/esm/icons/refresh-cw.mjs:
+lucide/dist/esm/icons/search.mjs:
+lucide/dist/esm/icons/settings-2.mjs:
+lucide/dist/esm/icons/sliders-horizontal.mjs:
+lucide/dist/esm/icons/target.mjs:
+lucide/dist/esm/icons/users.mjs:
+lucide/dist/esm/icons/wrench.mjs:
+lucide/dist/esm/lucide.mjs:
+  /**
+   * @license lucide v1.52.0 - ISC
+   *
+   * This source code is licensed under the ISC license.
+   * See the LICENSE file in the root directory of this source tree.
+   */

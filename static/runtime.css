@@ -1,0 +1,2 @@
+html:not([data-serpro-visible=true]) a[href="#monitor"],html:not([data-serpro-visible=true]) #monitor{display:none!important}
+html[data-animations=false] *,html[data-animations=false] *::before,html[data-animations=false] *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}

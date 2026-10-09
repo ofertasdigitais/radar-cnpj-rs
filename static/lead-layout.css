@@ -1,0 +1,94 @@
+/* Scoped to the seller's lead panel; preserve the existing automatic layout. */
+.crm-toolbar { flex-wrap: wrap; }
+.crm-toolbar .crm-lead-search { min-width: 0; }
+.crm-column-control { display: flex; align-items: center; gap: 8px; color: var(--text); font-weight: 700; }
+.crm-column-control select { border: 1px solid var(--line); border-radius: 8px; min-height: 44px; }
+.lead-columns-hint { color: var(--muted); font-size: 14px; margin: 12px 0 0; }
+.lead-grid-scroll { min-width: 0; width: 100%; padding-bottom: 8px; }
+.lead-grid-scroll .portfolio-leads.custom-columns { grid-template-columns: repeat(var(--lead-columns), minmax(0, 1fr)); }
+.portfolio-leads.custom-columns .portfolio-lead { min-width: 0; padding: 14px; display: flex; flex-direction: column; }
+.portfolio-leads.custom-columns .portfolio-lead h4 { overflow-wrap: anywhere; font-size: 16px; line-height: 1.35; }
+.portfolio-leads.custom-columns .portfolio-lead-tags { flex-wrap: wrap; }
+.portfolio-leads.custom-columns .portfolio-lead-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: auto; }
+.portfolio-leads.custom-columns .portfolio-lead-actions button,
+.portfolio-leads.custom-columns .portfolio-lead-actions select { min-width: 0; min-height: 44px; width: 100%; white-space: normal; }
+.portfolio-leads.custom-columns .portfolio-lead-activity { font-size: 14px; line-height: 1.4; }
+.portfolio-leads.custom-columns .portfolio-next-action { margin-bottom: 12px; }
+/* Use the available workspace, not a fixed-width island inside it. */
+body[data-view] .content { width: 100%; max-width: none !important; box-sizing: border-box; padding: 24px; }
+body[data-view] .content > .workspace-intro,
+body[data-view] .content > .app-view:not(.hero-console) { width: 100% !important; max-width: none !important; }
+main, .content, .app-view, .portfolio-board, .crm-board, .crm-insights > section { min-width: 0; }
+#leads .portfolio-layout { display: grid; grid-template-columns: minmax(0,1fr); }
+#leads .portfolio-sidebar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px; }
+#leads .portfolio-tip { display: none; }
+#leads .portfolio-profiles { display: flex; flex-wrap: wrap; flex: 1; gap: 8px; min-width: 0; }
+#leads .portfolio-profile { min-width: 0; flex: 0 1 300px; width: 100%; }
+.crm-toolbar { display: grid; grid-template-columns: minmax(240px,1fr) minmax(320px,1fr) auto auto; align-items: end; }
+.crm-toolbar .portfolio-view-switch { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+.crm-toolbar .portfolio-view-switch select { width: 100%; min-width: 0; min-height: 44px; }
+.crm-toolbar .crm-lead-search { min-height: 44px; width: 100%; box-sizing: border-box; }
+.crm-column-control { flex-direction: column; align-items: stretch; }
+.crm-column-control select { width: 100%; min-width: 0; }
+.crm-focus-tabs { display: grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); overflow: visible; }
+.crm-focus-tabs button { min-height: 44px; }
+.crm-focus-tabs button span { white-space: normal !important; overflow: visible !important; }
+.portfolio-lead-identity, .portfolio-lead-commercial, .portfolio-next-action { min-width: 0; }
+.portfolio-lead-activity, .portfolio-lead-meta, .portfolio-next-action span,
+.portfolio-lead h4 { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; overflow-wrap: anywhere; }
+.portfolio-leads.list-mode .portfolio-lead { grid-template-columns: 110px minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr); }
+.lead-activity-filter { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; padding: 16px; margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-soft); }
+.lead-activity-filter > div { flex: 1 1 280px; }
+.lead-activity-filter small { display: block; margin-top: 6px; color: var(--muted); }
+.lead-activity-filter label { display: grid; gap: 6px; min-width: 0; }
+.lead-activity-filter input, .lead-activity-filter button, .activity-pagination button { min-height: 44px; }
+.lead-activity-filter input { width: 100%; box-sizing: border-box; }
+.lead-activity-log { margin: 12px 0; padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.lead-activity-log summary { cursor: pointer; color: var(--text); font-weight: 700; min-height: 32px; }
+.lead-activity-log > p { color: var(--muted); }
+.lead-activity-row { display: grid; grid-template-columns: 160px minmax(0,1fr) minmax(0,1.5fr); gap: 16px; padding: 14px 0; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+.lead-activity-row span { display: block; margin-top: 4px; color: var(--muted); }
+.lead-activity-row p { margin: 6px 0 0; }
+.activity-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; }
+/* Shared form and modal safeguards, including the lead treatment editor. */
+.detail-drawer, .import-modal, .profile-modal, .team-profile-modal, .export-crm-modal { box-sizing: border-box; max-width: calc(100vw - 24px) !important; }
+.detail-grid, .team-editor-grid, .filter-grid, .export-crm-grid { min-width: 0; }
+.detail-grid > *, .team-editor-grid > *, .filter-grid > *, .export-crm-grid > * { min-width: 0; }
+.team-editor-grid input, .team-editor-grid select, .team-editor-grid textarea,
+.filter-grid input, .filter-grid select { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }
+.detail-item strong, .team-history p { overflow-wrap: anywhere; }
+.team-editor-grid label:first-child { grid-column: auto !important; }
+.team-editor-grid label:has(#teamStrategy), .team-editor-grid label:has(#teamNotes) { grid-column: 1/-1; }
+.topbar { background: var(--bg) !important; }
+.pipeline-grid { grid-auto-flow: row; grid-auto-columns: auto; overflow: visible; }
+@media(max-width:1400px) {
+  .crm-toolbar { grid-template-columns: minmax(0,1fr) minmax(0,1fr); align-items: center; }
+  .crm-column-control { flex-direction: row; align-items: center; }
+  .crm-layout-switch { width: fit-content; }
+}
+@media(max-width:1100px) {
+  #leads .portfolio-layout { grid-template-columns: minmax(0,1fr); }
+  #leads .portfolio-tip { display: none; }
+  #leads .portfolio-profiles { display: flex; flex-wrap: wrap; gap: 8px; }
+  #leads .portfolio-profile { min-width: 200px; flex: 1; }
+  .crm-toolbar .crm-lead-search { flex-basis: 100%; width: 100%; }
+  .crm-column-control { flex-wrap: wrap; }
+}
+@media(max-width:700px) {
+  body[data-view] .content { padding: 12px; }
+  .crm-toolbar { grid-template-columns: minmax(0,1fr); }
+  .crm-toolbar .portfolio-view-switch { grid-template-columns: minmax(0,1fr); }
+  .crm-toolbar .portfolio-view-switch select + select { border-left: 0; border-top: 1px solid var(--line); }
+  .crm-column-control { display: grid; grid-template-columns: auto minmax(0,1fr); }
+  #leads .portfolio-sidebar { display: block; }
+  #leads .portfolio-profiles { display: grid; grid-template-columns: minmax(0,1fr); overflow: visible; }
+  #leads .portfolio-profile { min-width: 0; max-width: 100%; }
+  #leads .portfolio-profile strong { white-space: normal; overflow-wrap: anywhere; }
+  .crm-focus-tabs { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .lead-activity-filter label { flex: 1 1 130px; }
+  .lead-activity-filter button { flex: 1 1 130px; }
+  .lead-activity-row { grid-template-columns: minmax(0,1fr); gap: 8px; }
+  .portfolio-leads.list-mode .portfolio-lead { display: flex; }
+  .detail-grid, .team-editor-grid { grid-template-columns: minmax(0,1fr) !important; }
+  .detail-grid > *, .team-editor-grid > * { grid-column: auto !important; }
+}

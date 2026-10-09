@@ -11,6 +11,7 @@ class ImportTests(unittest.TestCase):
 
     def test_import_filters_rs(self):
         db=sqlite3.connect(":memory:")
+        self.addCleanup(db.close)
         db.execute("CREATE TABLE companies(cnpj TEXT UNIQUE,razao_social TEXT,nome_fantasia TEXT,situacao TEXT,data_abertura TEXT,cnae TEXT,cnaes_secundarios TEXT,segmento TEXT,municipio TEXT,regiao TEXT,uf TEXT,cep TEXT,bairro TEXT,logradouro TEXT,numero TEXT,telefone TEXT,email TEXT,porte TEXT,mei INTEGER)")
         data="cnpj;razao_social;uf;data_abertura;cnae;municipio;mei\n12345678000190;Teste RS;RS;20260801;6201501;Porto Alegre;S\n12345678000191;Teste SC;SC;20260801;4711302;Florianopolis;N\n".encode()
         result=import_csv_bytes(db,data)

@@ -1,89 +1,10 @@
 <!doctype html>
-<html lang="pt-BR">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Radar CNPJ RS — inteligência comercial para descobrir e trabalhar novos negócios no Rio Grande do Sul.">
-  <meta name="theme-color" content="#09080b">
-  <title>Acesso · Radar CNPJ RS</title>
-  <link rel="icon" href="/icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/style.css?v=38">
-  <link rel="stylesheet" href="/visual.css?v=9">
-</head>
-<body class="login-page" data-auth-view="__AUTH_VIEW__" data-registration="__REGISTRATION_STATE__">
-  <main class="auth-shell">
-    <section class="auth-showcase" aria-label="Apresentação do Radar CNPJ RS">
-      <header class="auth-brand">
-        <span class="auth-brand-mark">R</span>
-        <span><strong>RADAR<span>//</span>CNPJ</strong><small>INTELIGÊNCIA COMERCIAL</small></span>
-      </header>
-
-      <div class="auth-pitch">
-        <p class="auth-kicker"><span></span> NOVOS NEGÓCIOS NO RADAR</p>
-        <h1>Encontre a empresa certa no <em>momento certo.</em></h1>
-        <p class="auth-lead">Transforme novos CNPJs do Rio Grande do Sul em oportunidades organizadas para sua equipe comercial.</p>
-
-        <div class="auth-benefits" aria-label="Recursos do Radar">
-          <article><span>01</span><div><strong>Descubra</strong><p>Filtre aberturas por CNAE, município, região e período.</p></div></article>
-          <article><span>02</span><div><strong>Priorize</strong><p>Identifique contatos disponíveis e leads de maior potencial.</p></div></article>
-          <article><span>03</span><div><strong>Converta</strong><p>Organize carteiras, estratégias e etapas da prospecção.</p></div></article>
-        </div>
-      </div>
-
-      <div class="auth-radar" aria-hidden="true">
-        <div class="auth-orbit orbit-one"></div><div class="auth-orbit orbit-two"></div><div class="auth-orbit orbit-three"></div>
-        <div class="auth-sweep"></div><i class="signal signal-one"></i><i class="signal signal-two"></i><i class="signal signal-three"></i>
-        <div class="auth-radar-center"><small>BASE</small><strong>RS</strong><span>ATIVA</span></div>
-      </div>
-
-      <footer class="auth-showcase-footer"><span><i></i> Sistema operacional</span><span>Dados públicos · Receita Federal</span></footer>
-    </section>
-
-    <section class="auth-access" aria-label="Acesso ao Radar">
-      <div class="auth-panel">
-        <div class="auth-mobile-brand"><span class="auth-brand-mark">R</span><strong>RADAR<span>//</span>CNPJ</strong></div>
-        <p class="auth-kicker"><span></span> ACESSO À PLATAFORMA</p>
-        <div class="auth-heading auth-heading-login">
-          <h2>Bem-vindo de volta.</h2>
-          <p>Acesse seu ambiente de inteligência comercial.</p>
-        </div>
-        <div class="auth-heading auth-heading-register">
-          <h2>Crie sua conta.</h2>
-          <p>Comece a organizar sua prospecção em poucos instantes.</p>
-        </div>
-
-        <div class="auth-tabs" role="tablist" aria-label="Tipo de acesso">
-          <button type="button" role="tab" data-auth-tab="login">Entrar</button>
-          <button type="button" role="tab" data-auth-tab="register">Criar conta</button>
-          <span class="auth-tab-indicator"></span>
-        </div>
-
-        <!--AUTH_ERROR-->
-
-        <form class="auth-form auth-form-login" method="post" action="/login" novalidate>
-          <label><span>Usuário ou e-mail</span><input name="username" autocomplete="username" required placeholder="Digite seu usuário ou e-mail"></label>
-          <label><span>Senha</span><span class="auth-password"><input name="password" type="password" autocomplete="current-password" required placeholder="Digite sua senha"><button type="button" data-password-toggle aria-label="Mostrar senha">VER</button></span></label>
-          <div class="auth-form-row"><label class="auth-check"><input type="checkbox" name="remember"><span></span> Manter conectado</label><small>Acesso protegido</small></div>
-          <button class="auth-submit" type="submit"><span>Entrar no Radar</span><b>→</b></button>
-        </form>
-
-        <form class="auth-form auth-form-register" method="post" action="/register" novalidate>
-          <div class="auth-field-grid">
-            <label><span>Nome completo</span><input name="name" autocomplete="name" required minlength="2" value="__REGISTER_NAME__" placeholder="Seu nome"></label>
-            <label><span>Usuário</span><input name="username" autocomplete="username" required minlength="3" value="__REGISTER_USERNAME__" placeholder="Ex.: ana.vendas"></label>
-          </div>
-          <label><span>E-mail profissional</span><input name="email" type="email" autocomplete="email" required value="__REGISTER_EMAIL__" placeholder="voce@empresa.com.br"></label>
-          <label><span>Senha</span><span class="auth-password"><input name="password" type="password" autocomplete="new-password" required minlength="10" placeholder="Mínimo de 10 caracteres"><button type="button" data-password-toggle aria-label="Mostrar senha">VER</button></span><small class="auth-strength"><i></i><i></i><i></i><i></i><em>Use letras e números</em></small></label>
-          <label><span>Confirmar senha</span><span class="auth-password"><input name="confirm_password" type="password" autocomplete="new-password" required placeholder="Repita sua senha"><button type="button" data-password-toggle aria-label="Mostrar senha">VER</button></span></label>
-          <label class="auth-invite"><span>Código de convite <small>se solicitado</small></span><input name="invite_code" autocomplete="one-time-code" placeholder="Código da sua equipe"></label>
-          <label class="auth-check auth-terms"><input type="checkbox" required><span></span> Concordo com o uso responsável dos dados públicos e com as regras de acesso.</label>
-          <button class="auth-submit" type="submit"><span>Criar minha conta</span><b>→</b></button>
-        </form>
-
-        <footer class="auth-panel-footer"><span>Ambiente protegido</span><span>•</span><span>Sessão segura de 12 horas</span></footer>
-      </div>
-    </section>
-  </main>
-  <script src="/auth.js?v=1" defer></script>
-</body>
-</html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Radar CNPJ RS — inteligência comercial e prospecção organizada.">
+<meta name="theme-color" content="#09080b"><title>Acesso · Radar CNPJ</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml"><link rel="stylesheet" href="/react-login.css?v=1">
+<link rel="stylesheet" href="/radar-polish.css?v=1"></head><body>
+<main id="radarAccess" data-site-name="__SITE_NAME__" data-copyright="__COPYRIGHT__" data-auth-view="__AUTH_VIEW__" data-registration="__REGISTRATION_STATE__" data-name="__REGISTER_NAME__" data-username="__REGISTER_USERNAME__" data-email="__REGISTER_EMAIL__">
+<div class="access-fallback"><h1>Radar CNPJ</h1><!--AUTH_ERROR--><form action="/login" method="post"><label>Usuário ou e-mail<input name="username" autocomplete="username" required></label><label>Senha<input name="password" type="password" autocomplete="current-password" required></label><button type="submit">Entrar no Radar</button></form><p>© 2026 Radar CNPJ. Todos os direitos reservados.</p></div>
+</main><script src="/react-login.js?v=1" defer></script></body></html>

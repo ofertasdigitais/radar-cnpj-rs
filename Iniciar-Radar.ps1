@@ -9,6 +9,7 @@ $ProgressPreference = "SilentlyContinue"
 $projectDir = $PSScriptRoot
 $dataDir = Join-Path $projectDir "data"
 $credentialFile = Join-Path $dataDir ".radar-credential.xml"
+$sessionSecretFile = Join-Path $dataDir ".radar-session-secret"
 $pidFile = Join-Path $dataDir ".radar-launcher-pids.json"
 $serverOutLog = Join-Path $dataDir "radar-server.log"
 $serverErrorLog = Join-Path $dataDir "radar-server-error.log"
@@ -173,8 +174,15 @@ try {
 
     $env:RADAR_ADMIN_USER = $credential.UserName
     $env:RADAR_ADMIN_PASSWORD = $plainPassword
-    $env:RADAR_SESSION_SECRET = ([guid]::NewGuid().ToString("N") + [guid]::NewGuid().ToString("N"))
+    # Reset revokes persisted sessions too; all launch paths now use this key.
+    if ($RedefinirAcesso -or -not (Test-Path -LiteralPath $sessionSecretFile)) {
+        [System.IO.File]::WriteAllText($sessionSecretFile, ([guid]::NewGuid().ToString("N") + [guid]::NewGuid().ToString("N")))
+    }
+    $env:RADAR_SESSION_SECRET = (Get-Content -LiteralPath $sessionSecretFile -Raw).Trim()
     $env:RADAR_SECURE_COOKIES = "1"
+    # Este inicializador abre um túnel público: não herdar o modo de desenvolvimento.
+    $env:RADAR_ENV = 'production'
+    $env:RADAR_ALLOW_REGISTRATION = '0'
     $env:RADAR_HOST = "127.0.0.1"
     $env:RADAR_PORT = "8000"
     $env:PYTHONUNBUFFERED = "1"

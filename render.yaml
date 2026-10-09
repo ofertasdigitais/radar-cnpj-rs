@@ -8,6 +8,10 @@ services:
     envVars:
       - key: RADAR_HOST
         value: 0.0.0.0
+      - key: RADAR_ENV
+        value: production
+      - key: RADAR_ALLOW_REGISTRATION
+        value: "0"
       - key: RADAR_DATA_DIR
         value: /var/data
       - key: RADAR_AUTO_SYNC
@@ -23,7 +27,7 @@ services:
       # Monitoramento diário oficial via Serpro/Conecta Gov.
       # As credenciais são secretas e devem ser preenchidas no painel do Render.
       - key: RADAR_SERPRO_AUTO_MONITOR
-        value: "1"
+        value: "0"
       - key: RADAR_SERPRO_ENV
         value: producao
       - key: RADAR_SERPRO_CONSUMER_KEY

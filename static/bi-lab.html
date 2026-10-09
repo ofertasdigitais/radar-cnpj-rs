@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Radar CNPJ · BI Comercial</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/bi-lab.css?v=5">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Voltar ao Radar"><span>R</span><strong>RADAR <i>//</i> CNPJ<small>INTELIGÊNCIA COMERCIAL</small></strong></a>
+    <div class="top-status"><span></span> BI COMERCIAL <b>VISÃO EXECUTIVA</b></div>
+    <div class="top-actions"><button id="themeToggle" title="Alternar tema">◐</button><a href="/">Voltar ao Radar ↗</a></div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">VISÃO GERAL <span>DESEMPENHO COMERCIAL</span></p>
+        <h1>Dashboard comercial</h1>
+        <p class="hero-copy">Resultados, conversão, pipeline e prioridades da operação em uma única leitura.</p>
+      </div>
+      <div class="hero-control">
+        <label>RESPONSÁVEL<select id="profileSelect"><option>Carregando…</option></select></label>
+        <label>PERÍODO<select id="periodSelect"><option value="all">Todo o histórico</option><option value="90">Últimos 90 dias</option><option value="30">Últimos 30 dias</option><option value="7">Últimos 7 dias</option></select></label>
+        <button id="refreshBtn">Atualizar dados ↻</button>
+        <small id="updatedAt">Aguardando dados</small>
+      </div>
+    </section>
+
+    <div id="loading" class="state"><span></span><strong>Construindo análise comercial…</strong></div>
+    <div id="error" class="state error" hidden><strong>Não foi possível carregar o BI.</strong><p id="errorText"></p><button id="retryBtn">Tentar novamente</button></div>
+
+    <div id="dashboard" hidden>
+      <section class="kpi-grid" id="kpiGrid"></section>
+
+      <section class="decision-strip" id="decisionStrip"></section>
+
+      <div class="dashboard-grid">
+        <article class="panel span-8 funnel-panel">
+          <header><div><p class="eyebrow">PIPELINE COMERCIAL</p><h2>Valor e volume por etapa</h2></div><span class="panel-note">Clique em uma etapa para destacar</span></header>
+          <div id="funnelChart" class="funnel"></div>
+        </article>
+
+        <article class="panel span-4 conversion-panel">
+          <header><div><p class="eyebrow">CONVERSÃO</p><h2>Saúde do funil</h2></div></header>
+          <div id="conversionGauge" class="gauge-wrap"></div>
+          <div id="conversionSteps" class="conversion-steps"></div>
+        </article>
+
+        <article class="panel span-7 speed-panel">
+          <header><div><p class="eyebrow">VELOCIDADE COMERCIAL</p><h2>Prazos que movem a receita</h2></div><span class="panel-note">dias corridos</span></header>
+          <div id="speedMetrics" class="speed-grid"></div>
+          <div id="deadlineChart" class="deadline-chart"></div>
+        </article>
+
+        <article class="panel span-5 outcome-panel">
+          <header><div><p class="eyebrow">QUALIDADE DA ABORDAGEM</p><h2>Resultado dos contatos</h2></div></header>
+          <div id="outcomeChart" class="donut-layout"></div>
+        </article>
+
+        <article class="panel span-6 money-panel">
+          <header><div><p class="eyebrow">OPORTUNIDADES</p><h2>Distribuição financeira</h2></div></header>
+          <div id="moneyFlow" class="money-flow"></div>
+        </article>
+
+        <article class="panel span-6 ranking-panel">
+          <header><div><p class="eyebrow">COBERTURA</p><h2>Onde estão os leads</h2></div><div class="segmented"><button class="active" data-rank="city">Cidades</button><button data-rank="segment">Segmentos</button></div></header>
+          <div id="rankingChart" class="ranking"></div>
+        </article>
+
+        <article class="panel span-8 trend-panel primary-visual">
+          <header><div><p class="eyebrow">EVOLUÇÃO DA BASE</p><h2>Entrada de oportunidades</h2><p class="chart-explain">Ritmo de inclusão de leads e crescimento acumulado no período.</p></div><span class="panel-note">últimas 12 semanas</span></header>
+          <div id="trendChart" class="trend-chart"></div>
+        </article>
+
+        <article class="panel span-4 aging-panel">
+          <header><div><p class="eyebrow">MATURIDADE DA CARTEIRA</p><h2>Tempo parado no funil</h2><p class="chart-explain">Quanto tempo os leads permanecem sem atualização comercial.</p></div></header>
+          <div id="agingChart" class="aging-chart"></div>
+        </article>
+
+        <article class="panel span-6 matrix-panel">
+          <header><div><p class="eyebrow">MATRIZ DE AÇÃO</p><h2>Potencial × urgência</h2><p class="chart-explain">Organiza a carteira entre prioridade imediata, desenvolvimento, manutenção e baixa urgência.</p></div></header>
+          <div id="actionMatrix" class="action-matrix"></div>
+        </article>
+
+        <article class="panel span-6 quality-panel">
+          <header><div><p class="eyebrow">DISCIPLINA COMERCIAL</p><h2>Completude dos registros</h2><p class="chart-explain">Mede se os leads possuem contato, ação, prazo, valores e resultado documentados.</p></div></header>
+          <div id="qualityRadar" class="quality-radar"></div>
+        </article>
+
+        <article class="panel span-12 priority-panel">
+          <header><div><p class="eyebrow">PRIORIDADE EXECUTIVA</p><h2>Leads que exigem decisão</h2></div><span class="panel-note" id="priorityCount"></span></header>
+          <div class="table-wrap"><table><thead><tr><th>Empresa</th><th>Etapa</th><th>Próxima ação</th><th>Negociado</th><th>Potencial</th><th>Risco</th></tr></thead><tbody id="priorityTable"></tbody></table></div>
+        </article>
+      </div>
+
+      <footer><span>RADAR CNPJ · BI COMERCIAL</span><p>Indicadores calculados sobre os dados registrados no Painel de Leads. Valores sem preenchimento não são estimados.</p></footer>
+    </div>
+  </main>
+  <script src="/bi-metrics.js?v=1"></script>
+  <script src="/bi-lab.js?v=9"></script>
+</body>
+</html>

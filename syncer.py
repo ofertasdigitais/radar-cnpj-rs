@@ -15,6 +15,7 @@ from pathlib import Path
 from xml.etree import ElementTree
 
 from importer import region_for, segment_for
+import admin_panel
 
 SHARE_TOKEN = "YggdBLfdninEJX9"
 WEBDAV = "https://arquivos.receitafederal.gov.br/public.php/webdav"
@@ -266,7 +267,7 @@ class CNPJSync:
 
             def loop():
                 while True:
-                    self.schedule_if_needed()
+                    if admin_panel.get('sync_scheduler',self.db_path):self.schedule_if_needed()
                     time.sleep(check_interval)
 
             self.scheduler_thread = threading.Thread(target=loop, daemon=True, name="cnpj-sync-scheduler")

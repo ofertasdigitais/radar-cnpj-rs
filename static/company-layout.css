@@ -1,0 +1,17 @@
+.company-layout-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin: 16px 0; padding: 12px 16px; border: 1px solid var(--line); background: var(--panel-soft); border-radius: 10px; }
+.company-layout-toolbar label { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; color: var(--text); font-weight: 700; }
+.company-layout-toolbar select { min-height: 44px; min-width: 180px; max-width: 100%; padding: 8px 12px; }
+.company-layout-toolbar > span { color: var(--muted); font-size: 14px; }
+.company-cards { display: grid; grid-template-columns: repeat(var(--company-columns,1),minmax(0,1fr)); gap: 12px; padding: 12px; }
+.company-cards[hidden], #empresas .tableWrap[hidden] { display: none !important; }
+.company-preview-card { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--text); }
+.company-preview-card header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.company-preview-card header > b { margin-left: auto; color: var(--accent); }
+.company-preview-card h3 { margin: 0; font-size: 17px !important; line-height: 1.4; overflow-wrap: anywhere; }
+.company-preview-card p { margin: 0; color: var(--muted); overflow-wrap: anywhere; }
+.company-preview-card dl { margin: 0 0 8px; display: grid; gap: 10px; }
+.company-preview-card dt { color: var(--muted); font-size: 12px; }
+.company-preview-card dd { margin: 4px 0 0; font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+.company-preview-card button { margin-top: auto; min-height: 44px; width: 100%; white-space: normal; }
+.company-grid-empty { grid-column: 1/-1; color: var(--muted); padding: 20px; }
+@media(max-width:600px){.company-layout-toolbar label { width: 100%; }.company-layout-toolbar select { width: 100%; min-width: 0; }.company-cards { padding: 8px; }}

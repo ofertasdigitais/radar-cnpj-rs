@@ -1,0 +1,27 @@
+const {test,expect}=require('@playwright/test');
+for(const width of [390,768,1024,1920])for(const theme of ['dark','light'])test(`captação local ${width} / ${theme}`,async({page})=>{
+ await page.setViewportSize({width,height:1080});
+ await page.addInitScript(theme=>localStorage.setItem('radar-theme',theme),theme);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('/#ferramentas');
+ await expect(page.locator('.discovery-app')).toContainText('CAPTAÇÃO AUTÔNOMA');
+ await expect(page.getByRole('heading',{name:'Base OpenStreetMap local',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Criar campanha'}).click();
+ const dialog=page.locator('.discovery-dialog[open]');
+ await expect(dialog.getByLabel('Categoria de estabelecimento')).toBeVisible();
+ expect(await dialog.getByLabel('Categoria de estabelecimento').locator('option').count()).toBe(25);
+ await dialog.getByLabel('Nome da campanha').fill(`QA ${width} ${theme}`);
+ await dialog.getByLabel('Município do RS').fill('Porto Alegre');
+ await dialog.getByLabel('Categoria de estabelecimento').selectOption('dentistas');
+ await dialog.getByRole('button',{name:'Salvar campanha'}).click();
+ const card=page.locator('.discovery-campaign').filter({hasText:`QA ${width} ${theme}`});
+ await expect(card).toBeVisible({timeout:15000});await expect(card).toContainText('Dentistas');
+ await card.getByRole('button',{name:'Pausar'}).click();
+ await expect(card.getByRole('button',{name:'Coletar agora'})).toBeDisabled();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
+ await page.getByRole('button',{name:'Criar campanha'}).click();
+ const bounds=await dialog.boundingBox();expect(bounds.x).toBeGreaterThanOrEqual(0);expect(bounds.x+bounds.width).toBeLessThanOrEqual(width+1);
+ await dialog.getByRole('button',{name:'Cancelar'}).click();
+ await page.screenshot({path:`test-results/captacao-local-${width}-${theme}.png`,fullPage:true});
+ expect(errors).toEqual([]);
+});

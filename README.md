@@ -2,6 +2,24 @@
 
 Aplicação web para consultar empresas abertas recentemente no Rio Grande do Sul, com filtros por período, CNAE, segmento, município, região, situação cadastral e MEI.
 
+## Estado desta versão — 09/10/2026
+
+A versão funcional é **Python/SQLite local**, com componentes React integrados,
+Painel de Leads, BI comercial, PDF personalizado, captação, `/admin` e Central
+de Ajuda. O código pode ser versionado sem migrar nem substituir o banco.
+CRM/Base44 fica para outra versão e **não possui sincronização ativa**; sua
+estrutura foi preservada por enquanto. Cloudflare está em espera: o Worker
+legado não tem paridade com todas as funções atuais. Não publique essa pasta
+nem execute migrações remotas antes de fechar os bloqueios documentados.
+
+- [Validações e limites desta entrega](docs/ENTREGA-QA-20261009.md)
+- [Auditoria, correções e preparação de migração](docs/AUDITORIA-RADAR-20261007.md)
+- [Administração e parâmetros](docs/ADMIN-20261007.md)
+- [Central de Ajuda](docs/AJUDA-E-QUALIFICACAO-20261007.md)
+
+**GitHub guarda o código, não o banco nem um backup dos vendedores.** `data/`,
+backups, `.env`, credenciais, arquivos SQLite e logs ficam fora do Git.
+
 ## Recursos da interface
 
 - painel executivo com indicadores de volume, MEIs, alcance territorial e contatos públicos;
@@ -14,7 +32,7 @@ Aplicação web para consultar empresas abertas recentemente no Rio Grande do Su
 - perfis de prospecção persistentes, incluindo criação de filtros salvos;
 - CNAE exibido com código e descrição oficial da tabela CNAE da Receita;
 - funil comercial com etapas de novo lead até convertido;
-- favoritos, anotações e carteiras de leads por perfil persistidos no banco local;
+- favoritos, anotações e Painel de Leads privado por conta, persistidos no banco local;
 - filtros por etapa do lead e favoritos;
 - sincronização direta com as tabelas oficiais da Receita Federal;
 - exportação CSV;
@@ -23,7 +41,7 @@ Aplicação web para consultar empresas abertas recentemente no Rio Grande do Su
 ## Persistência para a equipe
 
 Os dados ficam no SQLite em `data/radar.db`. Isso inclui os registros trazidos
-da Receita, perfis de prospecção, leads selecionados em cada carteira, etapa do
+da Receita, perfis de prospecção, leads selecionados em cada painel, etapa do
 funil, favoritos e anotações do vendedor. As ações feitas pela equipe não ficam presas ao navegador: são
 gravadas no servidor e continuam disponíveis para o próximo acesso.
 
@@ -38,9 +56,12 @@ local da nuvem pode ser apagado quando o serviço for recriado.
 
 ## Executar
 
-Requer Python 3.10 ou superior e não usa dependências externas.
+Requer Python 3.10 ou superior e as dependências de `requirements.txt`.
+Os arquivos compilados da interface já ficam em `static/`.
 
 ```powershell
+python -m pip install -r requirements.txt
+# Em instalação nova, configure credenciais e segredo conforme .env.example.
 python app.py
 ```
 
@@ -60,7 +81,11 @@ Para iniciar também um túnel Cloudflare temporário, use
 Para um endereço fixo, use um túnel nomeado na conta Cloudflare ou publique o
 serviço em uma nuvem com volume persistente.
 
-## Publicar na web
+## Hospedagem futura (não ativada nesta entrega)
+
+As instruções abaixo são referências históricas. Render com disco persistente
+é pago; não é a opção gratuita solicitada. Para Cloudflare, consulte primeiro os
+bloqueios da auditoria. Subir código ao GitHub não autoriza publicar serviços.
 
 O projeto inclui `Dockerfile` e `render.yaml` para publicação como serviço web com disco persistente. No Render:
 
@@ -73,7 +98,31 @@ A configuração provisiona um serviço web, volume persistente de 30 GB, health
 
 O mesmo site pode ser instalado no celular ou computador como PWA pelo menu do navegador. Não é necessário manter versões desktop e mobile separadas.
 
-Para testar autenticação localmente, copie as variáveis de `.env.example` para o ambiente e substitua a senha de exemplo. Se usuário ou senha não forem definidos, a autenticação fica desativada para facilitar desenvolvimento local.
+Para testar autenticação localmente, configure as variáveis de `.env.example`
+no ambiente e substitua a senha de exemplo e o segredo. Em produção, o servidor
+exige administrador e segredo válido; não reutilize credenciais de testes.
+Somente desenvolvimento isolado pode operar sem autenticação. O arquivo `.env`
+não é carregado automaticamente pelo Python. Na instalação Windows existente,
+use os iniciadores para preservar as credenciais protegidas e o banco.
+
+## Repetir QA sem tocar a base funcional
+
+```powershell
+python -m unittest discover -s tests -q
+npm ci
+npm run build:react
+npm run test:tools
+npx playwright install chromium
+npm run test:browser
+```
+
+Testes de navegador usam bases temporárias nas portas 18000/18001, sem iniciar
+cargas da Receita ou coletores externos. Não devem apontar para a porta 8000.
+Na instalação já ligada, `python tools/qa_live_readonly.py` confere as rotas
+de Admin/Ajuda e a integridade em modo somente leitura; autentica com a
+credencial Windows existente e retorna erro se alguma verificação falhar.
+O workflow `QA local` do GitHub usa somente ambiente descartável, sem deploy,
+segredos da operação ou banco real.
 
 ## Atualização automática
 

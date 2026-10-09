@@ -244,6 +244,10 @@ class DailyMonitor:
             self.state.update(values)
 
     def start(self):
+        self._set(status='disabled',fase='Serpro desativado',mensagem='Consultas bloqueadas para evitar custos. Parâmetros disponíveis em /admin.')
+        return False
+
+    def _start_authorized(self):
         client = SerproClient()
         if not client.configured:
             self._set(status="configuration_required", fase="Configuração pendente", mensagem="Informe as credenciais contratadas da Serpro.")

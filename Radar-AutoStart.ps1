@@ -166,12 +166,36 @@ try {
         if (-not (Test-Path -LiteralPath $pidFile)) { throw "O registro dos processos do Radar nao foi encontrado." }
         $record = Get-Content -LiteralPath $pidFile -Raw | ConvertFrom-Json
         $serverProcess = Get-Process -Id ([int]$record.serverPid) -ErrorAction SilentlyContinue
+        # O inicializador interativo usa outro registro. Só adote o processo
+        # que também possui a porta local do Radar; não mate um PID antigo.
+        if (-not $serverProcess) {
+            $launcherRecordPath = Join-Path $dataDir '.radar-launcher-pids.json'
+            if (Test-Path -LiteralPath $launcherRecordPath) {
+                $launcherRecord = Get-Content -LiteralPath $launcherRecordPath -Raw | ConvertFrom-Json
+                $listener = Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
+                if ($listener -and $listener.OwningProcess -eq [int]$launcherRecord.serverPid) {
+                    $record = $launcherRecord
+                    $record | Add-Member -NotePropertyName publicUrl -NotePropertyValue '' -Force
+                    $serverProcess = Get-Process -Id ([int]$record.serverPid) -ErrorAction SilentlyContinue
+                }
+            }
+        }
         if (-not $serverProcess) { throw "O processo atual do Radar nao foi encontrado." }
         $commandLine = (Get-CimInstance Win32_Process -Filter "ProcessId=$($serverProcess.Id)" -ErrorAction SilentlyContinue).CommandLine
         if ($commandLine -notmatch "app\.py") { throw "O processo registrado nao corresponde ao Radar; recarga cancelada." }
 
         $tunnelPid = [int]$record.tunnelPid
         $tunnelProcess = if ($tunnelPid) { Get-Process -Id $tunnelPid -ErrorAction SilentlyContinue } else { $null }
+        if ($tunnelProcess -and -not $record.publicUrl) {
+            foreach ($existingLog in @($tunnelOutLog,$tunnelErrorLog)) {
+                if (Test-Path -LiteralPath $existingLog) {
+                    $existingContent = Get-Content -LiteralPath $existingLog -Raw
+                    if ([string]::IsNullOrEmpty($existingContent)) { continue }
+                    $existingMatches = [regex]::Matches($existingContent,'https://[a-z0-9-]+\.trycloudflare\.com')
+                    if ($existingMatches.Count) { $record.publicUrl = $existingMatches[$existingMatches.Count-1].Value }
+                }
+            }
+        }
         Stop-Process -Id $serverProcess.Id -Force
         for ($attempt = 0; $attempt -lt 30; $attempt++) {
             if (-not (Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue)) { break }
@@ -183,7 +207,10 @@ try {
         $env:RADAR_ADMIN_PASSWORD = Get-PlainPassword $credential
         $env:RADAR_SESSION_SECRET = (Get-Content -LiteralPath $sessionSecretFile -Raw).Trim()
         $env:RADAR_SECURE_COOKIES = if ($tunnelProcess) { "1" } else { "0" }
-        $env:RADAR_ALLOW_REGISTRATION = "1"
+        $env:RADAR_ENV = if ($tunnelProcess) { 'production' } else { 'development' }
+        # Ate o estado comercial estar isolado e validado por conta, o endereco
+        # publico deve aceitar somente usuarios ja provisionados.
+        $env:RADAR_ALLOW_REGISTRATION = "0"
         $env:RADAR_HOST = "127.0.0.1"
         $env:RADAR_PORT = "8000"
         $env:RADAR_AUTO_SYNC = "1"
@@ -230,11 +257,14 @@ try {
     $env:RADAR_ADMIN_PASSWORD = $plainPassword
     $env:RADAR_SESSION_SECRET = (Get-Content -LiteralPath $sessionSecretFile -Raw).Trim()
     $env:RADAR_SECURE_COOKIES = if ($ComCloudflare) { "1" } else { "0" }
+    $env:RADAR_ENV = if ($ComCloudflare) { 'production' } else { 'development' }
     $env:RADAR_HOST = "127.0.0.1"
     $env:RADAR_PORT = "8000"
     $env:RADAR_AUTO_SYNC = "1"
     $env:RADAR_SERPRO_AUTO_MONITOR = "1"
-    $env:RADAR_ALLOW_REGISTRATION = "1"
+    # Evita que um visitante do endereco publico crie uma conta apontando para
+    # o mesmo espaco comercial das contas existentes.
+    $env:RADAR_ALLOW_REGISTRATION = "0"
     $env:RADAR_DATA_DIR = $dataDir
     $env:PYTHONUNBUFFERED = "1"
 
@@ -248,7 +278,17 @@ try {
     if ($ComCloudflare) {
         $cloudflared = Get-Command cloudflared -ErrorAction SilentlyContinue
         if (-not $cloudflared) { throw "cloudflared nao foi encontrado no PATH do Windows." }
-        $tunnelProcess = Start-Process -FilePath $cloudflared.Source -ArgumentList @("tunnel", "--url", $localUrl, "--no-autoupdate") -WorkingDirectory $projectDir -RedirectStandardOutput $tunnelOutLog -RedirectStandardError $tunnelErrorLog -WindowStyle Hidden -PassThru
+        # Os logs sao reutilizados entre inicializacoes. Limpe-os antes de
+        # procurar a URL para nao reaproveitar um endereco de Quick Tunnel que
+        # ja expirou em uma execucao anterior.
+        foreach ($logPath in @($tunnelOutLog, $tunnelErrorLog)) {
+            if (Test-Path -LiteralPath $logPath) {
+                Clear-Content -LiteralPath $logPath -ErrorAction SilentlyContinue
+            }
+        }
+        # Nesta rede o pre-check do cloudflared confirma HTTP/2 e aponta QUIC
+        # degradado na porta 7844. Fixar HTTP/2 evita reconexoes por timeout.
+        $tunnelProcess = Start-Process -FilePath $cloudflared.Source -ArgumentList @("tunnel", "--protocol", "http2", "--url", $localUrl, "--no-autoupdate") -WorkingDirectory $projectDir -RedirectStandardOutput $tunnelOutLog -RedirectStandardError $tunnelErrorLog -WindowStyle Hidden -PassThru
         $record.tunnelPid = $tunnelProcess.Id
         $record | ConvertTo-Json | Set-Content -LiteralPath $pidFile -Encoding UTF8
         $publicUrl = Wait-ForTunnelUrl $tunnelProcess

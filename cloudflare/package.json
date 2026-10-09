@@ -1,0 +1,24 @@
+{
+  "name": "radar-cnpj-rs-cloudflare",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "dev": "wrangler dev --local",
+    "test": "vitest run",
+    "db:migrate:local": "wrangler d1 migrations apply radar-cnpj-rs --local",
+    "db:migrate:remote": "wrangler d1 migrations apply radar-cnpj-rs --remote",
+    "readiness": "python ../tools/release_readiness.py --cloudflare",
+    "predeploy": "npm run readiness",
+    "predb:migrate:remote": "npm run readiness",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.3.1",
+    "@cloudflare/workers-types": "^5.20260928.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11",
+    "wrangler": "^4.143.0"
+  }
+}

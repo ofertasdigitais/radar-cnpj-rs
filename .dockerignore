@@ -5,3 +5,14 @@ data
 tests
 .env
 *.log
+backup*/
+**/node_modules/
+node_modules/
+output/
+tmp/
+test-results/
+playwright-report/
+*.sqlite*
+*.db*
+*.xml
+cloudflare/

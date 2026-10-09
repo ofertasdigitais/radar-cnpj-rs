@@ -1,0 +1,55 @@
+name: QA local
+
+on:
+  push:
+    branches: [main, 'codex/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  local:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            collector/package-lock.json
+            cloudflare/package-lock.json
+      - name: Dependências locais
+        run: |
+          python -m pip install -r requirements.txt
+          npm ci
+          npm ci --prefix collector
+          npm ci --prefix cloudflare
+          npx playwright install --with-deps chromium
+      - name: Python e integridade em bancos temporários
+        run: python -m unittest discover -s tests -q
+      - name: Interface, ferramentas e coletor controlado
+        run: |
+          npm run build:tools
+          npm run build:react
+          npm run test:tools
+          node tests/test_commercial_taxonomy.cjs
+          node --test tests/base44-receiver.test.mjs
+          npm test --prefix collector
+      - name: Worker local (sem publicação)
+        run: |
+          npm run check --prefix cloudflare
+          npm test --prefix cloudflare
+      - name: Admin, FAQ, BI e responsivo no Chromium
+        run: npm run test:browser

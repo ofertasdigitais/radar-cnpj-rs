@@ -189,8 +189,13 @@
 .auth-form input:not([type="checkbox"]):focus { border-color: var(--auth-red); background: #fff; box-shadow: 0 0 0 4px rgba(209,38,79,.09); }
 .auth-password { position: relative; display: block !important; margin: 0 !important; }
 .auth-password input { padding-right: 76px !important; }
-.auth-password button { position: absolute; right: 7px; top: 7px; height: 38px; padding: 0 9px; color: #817a7f; border: 0; background: transparent; font-size: 9px; font-weight: 850; letter-spacing: .06em; cursor: pointer; }
-.auth-password button:hover { color: var(--auth-red); }
+/* "button:not(:disabled)" (efeito ripple, mais abaixo neste arquivo) tem a
+   mesma especificidade de ".auth-password button" e, por vir depois, vence
+   e devolve "position:relative" — o botão "VER" perde o posicionamento
+   absoluto e cai como texto solto abaixo do campo de senha. O atributo
+   deixa a regra mais específica para não depender da ordem no arquivo. */
+.auth-password button[data-password-toggle] { position: absolute; right: 7px; top: 7px; height: 38px; padding: 0 9px; color: #817a7f; border: 0; background: transparent; font-size: 9px; font-weight: 850; letter-spacing: .06em; cursor: pointer; }
+.auth-password button[data-password-toggle]:hover { color: var(--auth-red); }
 .auth-form-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 2px 0 24px; }
 .auth-form-row a { color: #6e676c; font-size: 12px; text-decoration: none; }
 .auth-form-row a:hover { color: var(--auth-red); }
@@ -537,10 +542,11 @@ html[data-theme="dark"] .nav-item.active { background: #f2f0f2; color: #171419; 
   box-shadow: var(--shadow-sm);
 }
 .kpi:hover { border-color: var(--accent); }
-.kpi.featured { background: linear-gradient(145deg, #21131a, #100d11); border-color: #5b3543; }
+.kpi.featured { background: linear-gradient(145deg, #21131a, #100d11); border-color: #5b3543; box-shadow: inset 3px 0 var(--accent-strong), var(--shadow-sm); }
 .kpi-index, .live { color: var(--faint); font-size: 10px !important; letter-spacing: .13em; }
 .live { color: var(--accent); }
 .kpi > strong { color: var(--ink); font-size: 36px !important; font-weight: 750 !important; line-height: 1 !important; }
+.kpi.featured > strong { font-size: 42px !important; }
 .kpi h3 { margin: 7px 0 2px; font-size: 16px !important; }
 .kpi p { color: var(--muted); font-size: 13px !important; }
 .kpi p b, .metric-arrow { color: var(--accent); }
@@ -771,7 +777,7 @@ html[data-theme] body .opportunity-card:hover {
 /* Tabelas, ranking, pipeline e carteira compartilham a mesma escala. */
 .analytics { gap: 12px; }
 .panel { border-radius: 13px; background: linear-gradient(145deg, var(--panel-raised), var(--panel-soft)); box-shadow: var(--shadow-sm); }
-.panel h2, .companies-section h2, .pipeline-head h2 { font-size: 22px !important; }
+.panel h2 { font-size: 22px !important; }
 .legend, .panel-meta { color: var(--faint); font-size: 12px !important; }
 .rank-row span, .city-name { font-size: 14px !important; }
 .rank-row b, .city-row b { font-size: 13px !important; }
@@ -786,6 +792,15 @@ html[data-theme] body .opportunity-card:hover {
 .stage-card small { color: var(--muted); font-size: 13px !important; }
 .stage-card:hover { border-color: var(--accent); }
 .stage-card.hot { background: linear-gradient(145deg, #28151d, #130d11); border-color: #633246; }
+/* Rodada 2 — Funil: em telas ≥601px cada etapa mostra só 3 linhas curtas
+   (rótulo, número, legenda) dentro de um cartão com 140px de altura mínima,
+   sobrando um vão vazio embaixo do conteúdo em toda etapa (mais visível nas
+   etapas com "0", que já são visualmente mais fracas por design). No
+   celular o próprio carrossel já usa uma altura menor e mais ajustada; aqui
+   fazemos o mesmo, sem tocar em regra de negócio, contagem ou navegação. */
+@media (min-width: 601px) {
+  .stage-card { min-height: 112px; }
+}
 .table-card { border-radius: 13px; background: var(--panel); box-shadow: var(--shadow-sm); }
 th { padding: 14px 16px; color: var(--faint); font-size: 11px !important; }
 td { padding: 16px; border-color: var(--line); font-size: 14px !important; }
@@ -795,6 +810,43 @@ td small { color: var(--muted); font-size: 13px !important; }
 .badge { background: var(--accent-soft); color: var(--accent-strong); font-size: 11px !important; }
 .lead-stage { color: var(--accent); background: var(--accent-soft); border: 1px solid var(--line); font-size: 11px !important; }
 .pager { font-size: 13px !important; }
+
+/* Rodada 2 — densidade útil nas listas de empresas (telas ≥601px, onde a
+   tabela permanece tabela; abaixo disso o próprio style.css já converte
+   cada linha num cartão e não deve ser tocado aqui). Duas coisas atrapalhavam
+   a leitura rápida em listas longas (Empresas, Alto potencial etc.):
+   1) a linha divisória entre registros usava --line, quase invisível sobre
+      o fundo escuro do painel, deixando os registros "grudados";
+   2) a coluna do nome tinha pouco espaço e muitos nomes reais (razão social
+      completa) quebravam para duas linhas de forma imprevisível, variando a
+      altura de linha a linha. Damos mais respiro ao nome (informação
+      primária) tirando um pouco da descrição do CNAE (informação
+      secundária, que já trunca com reticências) em vez de aumentar a tabela
+      inteira. Mesmo assim, nomes muito longos (comuns em MEI, razão social
+      completa) continuam quebrando em 2 linhas mesmo com mais espaço — por
+      isso a altura da linha é padronizada para caber 2 linhas de nome
+      sempre, e o rótulo de CNAE/segmento (ainda mais secundário) passa a
+      truncar em 1 linha, para que a altura da linha não varie mais
+      registro a registro. Nenhuma informação primária é escondida; a
+      variação que existia era de ritmo visual, não de conteúdo. */
+@media (min-width: 601px) {
+  .table-card td { padding: 13px 16px; }
+  .table-card tbody td { border-bottom-color: var(--line-strong); }
+  .table-card .company-cell { gap: 12px; }
+  .table-card .company-cell > div { min-width: 250px; }
+  .table-card .company-cell > div { min-height: 68px; display: flex; flex-direction: column; justify-content: center; }
+  .table-card .activity-name { max-width: 200px; }
+  .table-card .activity-name + small { display: block; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Dar mais espaço ao nome estreita a coluna de Localização; sem isso,
+     cidade/região com nomes longos ("Santa Cruz do Sul" / "Vale do Rio
+     Pardo") voltam a quebrar em 2 linhas e o problema só muda de coluna.
+     Localização é informação de apoio (a empresa já se identifica pelo
+     nome e CNPJ), então trunca em 1 linha aqui — mesmo tratamento que o
+     CNAE/segmento já recebe acima. */
+  .table-card td:nth-child(4) strong, .table-card td:nth-child(4) small {
+    display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+}
 
 /* Perfis, carteiras e monitor */
 .team-profiles-section, .profiles-section, .portfolio-section, .monitor-section { padding: 28px !important; }
@@ -817,10 +869,26 @@ td small { color: var(--muted); font-size: 13px !important; }
 .portfolio-lead-meta, .portfolio-lead-location { font-size: 13px !important; }
 .portfolio-lead-activity { font-size: 14px !important; }
 .portfolio-lead-actions button { font-size: 13px !important; }
+/* Rodada 2 — consistência global: o selo de etapa e os botões do cartão de
+   carteira (Abrir ficha/Remover) ficaram com cantos 100% retos (raio 0),
+   enquanto o mesmo tipo de elemento na lista de Empresas (.lead-stage,
+   .row-action) já usa cantos levemente arredondados. Alinhamos aqui à
+   escala que já existe no restante do produto, sem mudar tamanho, cor ou
+   comportamento. */
+.portfolio-lead-stage { border-radius: 6px; }
+.portfolio-lead-actions button { border-radius: 8px; }
 .monitor-card strong { font-size: 19px !important; }
 .monitor-card p, .monitor-run p, .monitor-run strong { font-size: 14px !important; }
 .monitor-stat strong { font-size: 30px !important; }
 .monitor-stat span, .monitor-stat small { font-size: 12px !important; }
+/* Rodada 2 — Monitor diário: os cartões numéricos (Validados hoje, Fila
+   pendente, Limite diário) dividem a mesma linha do grid com os dois
+   cartões de status (textos mais longos), então o grid estica todos para a
+   altura do maior — sobrando um vão vazio embaixo do número nos cartões
+   curtos. Centralizar o conteúdo verticalmente usa esse espaço de forma
+   intencional em vez de deixar um vazio solto, sem mudar a altura de
+   nenhum cartão nem os números exibidos. */
+.monitor-stat { display: flex; flex-direction: column; justify-content: center; }
 
 /* Ficha lateral: mesma tipografia, sem corte no topo e com leitura confortável. */
 .detail-drawer {
@@ -1023,6 +1091,7 @@ td small { color: var(--muted); font-size: 13px !important; }
 }
 .detail-drawer .contact-email strong { overflow-wrap: anywhere; }
 .detail-drawer .detail-workspace {
+  grid-column: 1 / -1;
   margin-top: 0;
   padding: 22px !important;
   border: 1px solid var(--line) !important;
@@ -1069,12 +1138,50 @@ td small { color: var(--muted); font-size: 13px !important; }
 .team-editor-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
 .team-editor-grid label { min-width: 0; font-size: 11px !important; line-height: 1.35 !important; }
 .team-editor-grid select,
+.team-editor-grid input,
 .team-editor-grid textarea {
   width: 100%;
   font-family: var(--font-ui) !important;
   font-size: 14px !important;
   line-height: 1.45 !important;
 }
+.team-editor-grid input {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+}
+.portfolio-lead-tags { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
+.portfolio-lead-outcome {
+  padding: 5px 8px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+  border-radius: 999px;
+  color: var(--text);
+  font-size: 10px !important;
+  font-weight: 700;
+}
+.portfolio-next-action {
+  margin: 8px 0 0;
+  padding: 10px;
+  border-left: 2px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  color: var(--muted);
+  font-size: 12px !important;
+}
+.portfolio-next-action time { display: block; margin-top: 4px; color: var(--text); font-weight: 650; }
+.team-history { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+.team-history-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 13px; }
+.team-history-head strong { color: var(--text); font-size: 14px !important; }
+.team-history-head small { color: var(--muted); font-size: 10px !important; text-transform: uppercase; letter-spacing: .08em; }
+#teamLeadHistory { display: grid; gap: 0; }
+#teamLeadHistory article { display: grid; grid-template-columns: 10px 1fr; gap: 11px; padding: 9px 0; }
+#teamLeadHistory article > span { width: 8px; height: 8px; margin-top: 5px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 13%, transparent); }
+#teamLeadHistory article strong { display: block; color: var(--text); font-size: 12px !important; }
+#teamLeadHistory article p { margin: 3px 0; color: var(--muted); font-size: 12px !important; line-height: 1.45; }
+#teamLeadHistory article time { color: var(--muted); font-size: 10px !important; }
+.team-history-empty { margin: 0; padding: 12px; border-radius: 8px; background: color-mix(in srgb, var(--panel) 70%, transparent); color: var(--muted); font-size: 12px !important; }
 .team-editor-grid textarea {
   min-height: 112px;
   padding: 12px;
@@ -1343,6 +1450,7 @@ html[data-theme] body .opportunity-card {
 }
 .detail-workspace .team-editor-grid label:first-child { padding-bottom: 2px; }
 .detail-workspace .team-editor-grid label > select,
+.detail-workspace .team-editor-grid label > input,
 .detail-workspace .team-editor-grid label > textarea { margin-top: 8px; }
 .detail-workspace .team-lead-editor .save-note {
   display: block;
@@ -1382,12 +1490,14 @@ html[data-theme="light"] .detail-drawer .detail-workspace {
 }
 html[data-theme="light"] .detail-workspace .detail-wallet-copy { color: #655e65 !important; }
 html[data-theme="light"] .detail-workspace select,
+html[data-theme="light"] .detail-workspace input,
 html[data-theme="light"] .detail-workspace textarea {
   border-color: #d4cbd1 !important;
   background: #fff !important;
   color: #201c20 !important;
 }
 html[data-theme="light"] .detail-workspace select:disabled,
+html[data-theme="light"] .detail-workspace input:disabled,
 html[data-theme="light"] .detail-workspace textarea:disabled {
   border-color: #e0d9de !important;
   background: #f5f2f4 !important;
@@ -1526,6 +1636,22 @@ html[data-theme="light"] .content::after { box-shadow: 0 0 14px rgba(134,23,47,.
   scrollbar-width: thin;
   scrollbar-color: var(--line-strong) transparent;
 }
+/* static/style.css define ".sidebar nav{flex-shrink:0}" para a barra lateral
+   antiga (sidebar inteira rolando). Isso tem mais especificidade que
+   ".primary-navigation" sozinho e trava a navegação no tamanho de conteúdo,
+   empurrando "Base de dados", "Aparência" e "Sincronizar Receita" para fora
+   da área visível em telas mais baixas (ex.: notebooks 1366x768), sem barra
+   de rolagem alguma para alcançá-los. Restaura o encolhimento apenas do menu
+   para que ele role internamente e o rodapé fixo continue sempre visível. */
+.sidebar .primary-navigation { flex-shrink: 1; }
+/* Quando o menu precisa encolher, o item que fica na borda é cortado no
+   meio da letra (parece renderização quebrada) e não há nenhum indício de
+   que existe mais conteúdo abaixo. Uma máscara suaviza as duas bordas em
+   vez de um corte abrupto, e isso já deixa claro que a lista rola. */
+.sidebar .primary-navigation {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 14px, black calc(100% - 14px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, black 14px, black calc(100% - 14px), transparent 100%);
+}
 .nav-group { display: grid; gap: 4px; margin-bottom: 14px; }
 .nav-group:last-child { margin-bottom: 0; }
 .nav-group-label {
@@ -1550,6 +1676,11 @@ html[data-theme="light"] .content::after { box-shadow: 0 0 14px rgba(134,23,47,.
   text-align: center;
 }
 .primary-navigation .nav-item > span:last-child {
+  width: auto;
+  min-width: 0;
+  color: inherit;
+}
+.primary-navigation .nav-item > span:nth-child(2) {
   width: auto;
   min-width: 0;
   color: inherit;
@@ -1599,12 +1730,25 @@ body[data-view="dashboard"] .content > .workspace-intro { display: none !importa
 .workspace-purpose span { color: var(--faint); font-size: 9px !important; font-weight: 800; letter-spacing: .13em; }
 .workspace-purpose strong { margin-top: 5px; color: var(--ink); font-size: 12px !important; line-height: 1.45; }
 
+/* Rodada 4.5 — o título do workspace-intro repete (ou quase repete) o título
+   que a própria tela já mostra logo abaixo (.section-head h2 / .pipeline-head h2).
+   Nessas telas, ocultamos apenas o h1 duplicado e compactamos o bloco, mantendo
+   eyebrow, descrição e "o que fazer aqui" — que não se repetem em nenhum outro
+   lugar. "Inteligência CNAE" (analises) não repete o h2 da tela (que é "CNAEs
+   com maior abertura"), então fica como estava. */
+body:is([data-view="empresas"],[data-view="oportunidades"],[data-view="perfis"],[data-view="leads"],[data-view="bi"],[data-view="pipeline"],[data-view="segmentacoes"],[data-view="monitor"]) #workspaceTitle { display: none; }
+body:is([data-view="empresas"],[data-view="oportunidades"],[data-view="perfis"],[data-view="leads"],[data-view="bi"],[data-view="pipeline"],[data-view="segmentacoes"],[data-view="monitor"]) .workspace-intro { min-height: 0 !important; padding-top: 14px; padding-bottom: 14px; }
+body:is([data-view="empresas"],[data-view="oportunidades"],[data-view="perfis"],[data-view="leads"],[data-view="bi"],[data-view="pipeline"],[data-view="segmentacoes"],[data-view="monitor"]) .workspace-intro .eyebrow { margin-bottom: 0; }
+body:is([data-view="empresas"],[data-view="oportunidades"],[data-view="perfis"],[data-view="leads"],[data-view="bi"],[data-view="pipeline"],[data-view="segmentacoes"],[data-view="monitor"]) .workspace-intro > div:nth-child(2) > p:last-child { margin-top: 2px; }
+body:is([data-view="empresas"],[data-view="oportunidades"],[data-view="perfis"],[data-view="leads"],[data-view="bi"],[data-view="pipeline"],[data-view="segmentacoes"],[data-view="monitor"]) .workspace-purpose { padding-top: 4px; padding-bottom: 4px; }
+
 body[data-view] .content > .app-view { display: none !important; }
 body[data-view="dashboard"] .content > #dashboard { display: flex !important; }
 body[data-view="analises"] .content > #analises,
 body[data-view="oportunidades"] .content > #oportunidades,
 body[data-view="perfis"] .content > #perfis,
-body[data-view="carteiras"] .content > #carteiras,
+body[data-view="leads"] .content > #leads,
+body[data-view="bi"] .content > #bi,
 body[data-view="segmentacoes"] .content > #segmentacoes,
 body[data-view="pipeline"] .content > #pipeline,
 body[data-view="empresas"] .content > #empresas,
@@ -1677,14 +1821,20 @@ body[data-view] .content > .app-view:not(.hero-console) {
 .journey-strip a em { color: var(--accent-strong); font-size: 17px !important; font-style: normal; }
 
 /* Radar procedural: profundidade e movimento sem imagens externas */
+/* Rodada 5: hierarquia do Dashboard — resumo geral primeiro, oportunidades em seguida,
+   navegação por último ("ver -> entender -> navegar"). Rodada 5.1: a ordem agora vem do
+   próprio HTML (DOM = ordem visual = ordem de Tab); aqui ficam só os espaçamentos. */
+body[data-view="dashboard"] .content > #dashboard > .radar-stage { margin-top: 16px; }
+body[data-view="dashboard"] .content > #dashboard > .journey-strip { margin: 16px 0 0; }
+
 .radar-stage {
   display: grid;
   grid-template-columns: minmax(280px, .78fr) minmax(420px, 1.22fr);
   gap: 24px;
   width: min(1220px, calc(100% - 34px));
-  min-height: 430px;
+  min-height: 388px;
   margin: 0 auto 16px;
-  padding: 28px 32px;
+  padding: 24px 28px;
   overflow: hidden;
   position: relative;
   border: 1px solid var(--line-strong);
@@ -1702,17 +1852,17 @@ body[data-view] .content > .app-view:not(.hero-console) {
   background: linear-gradient(110deg, transparent 0 49.8%, rgba(255,255,255,.025) 50%, transparent 50.2%);
 }
 .radar-copy { align-self: center; position: relative; z-index: 3; }
-.radar-copy h2 { max-width: 430px; margin: 0; font-size: clamp(27px, 3vw, 39px) !important; }
-.radar-copy > p:not(.eyebrow) { max-width: 470px; margin: 13px 0 22px; color: var(--muted); font-size: 13px !important; line-height: 1.6; }
+.radar-copy h2 { max-width: 430px; margin: 0; font-size: clamp(23px, 2.3vw, 32px) !important; }
+.radar-copy > p:not(.eyebrow) { max-width: 470px; margin: 10px 0 18px; color: var(--muted); font-size: 13px !important; line-height: 1.6; }
 .radar-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
 .radar-stats > div { padding: 11px 10px; border: 1px solid var(--line); border-radius: 8px; background: rgba(255,255,255,.025); }
 .radar-stats span, .radar-stats strong { display: block; }
 .radar-stats span { color: var(--faint); font-size: 8px !important; line-height: 1.3; text-transform: uppercase; letter-spacing: .08em; }
 .radar-stats strong { margin-top: 5px; color: var(--ink); font-size: 20px !important; }
-.radar-action { display: inline-flex; align-items: center; gap: 12px; margin-top: 20px; color: var(--ink); font-size: 12px !important; font-weight: 700; text-decoration: none; }
+.radar-action { display: inline-flex; align-items: center; gap: 12px; margin-top: 16px; color: var(--ink); font-size: 12px !important; font-weight: 700; text-decoration: none; }
 .radar-action span { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--accent); border-radius: 50%; color: var(--accent-strong); transition: transform .18s ease, background .18s ease; }
 .radar-action:hover span { transform: translateX(4px); background: var(--accent); color: #fff; }
-.radar-scene { min-height: 365px; position: relative; perspective: 900px; }
+.radar-scene { min-height: 328px; position: relative; perspective: 900px; }
 .radar-plane {
   width: min(420px, 36vw);
   aspect-ratio: 1;
@@ -1961,6 +2111,32 @@ body[data-view] .content > .app-view:not(.hero-console) { margin-top: 0 !importa
 .filter-grid input, .filter-grid select { width: 100%; min-height: 46px; margin-top: 7px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--panel); color: var(--ink); font-size: 13px !important; }
 .filter-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 22px 20px; border-top: 1px solid var(--line); background: color-mix(in srgb, var(--panel-soft) 86%, transparent); }
 .filter-actions button { min-height: 42px; padding: 0 16px; border: 1px solid var(--line-strong); border-radius: 8px; font-size: 12px !important; font-weight: 750 !important; }
+.search-box input { border-radius: 8px; border-color: var(--line-strong); padding-right: 32px; }
+.portfolio-board-head .secondary { border-radius: 8px; }
+
+/* Empresas — quarta rodada: refinamento profundo */
+.search-clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--faint);
+  font-size: 18px;
+  line-height: 1;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color .12s ease, background .12s ease;
+}
+.search-clear:hover { color: var(--ink); background: var(--hover); }
+.search-clear:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 1px; }
+.search-clear[hidden] { display: none; }
 
 html[data-theme="light"] {
   --muted: #625b61;
@@ -2056,21 +2232,21 @@ html[data-theme="light"] .stage-card.hot small { color: #e8dfe4 !important; }
 
 /* Portal Full HD: proporcao equilibrada entre apresentacao e acesso. */
 @media (min-width: 1440px) and (min-height: 850px) {
-  .auth-shell { grid-template-columns: minmax(0, 1.08fr) minmax(620px, .92fr); }
+  .auth-shell { grid-template-columns: minmax(0, 1.12fr) minmax(640px, .88fr); }
   .auth-showcase { padding: clamp(48px, 4vw, 76px) clamp(58px, 5vw, 96px); }
-  .auth-pitch { width: min(690px, 82%); padding: 28px 0; }
+  .auth-pitch { width: min(740px, 86%); padding: 34px 0; }
   .auth-pitch h1 {
     max-width: 660px;
-    font-size: clamp(52px, 3.55vw, 68px) !important;
+    font-size: clamp(58px, 3.85vw, 74px) !important;
     line-height: 1.01 !important;
   }
-  .auth-lead { max-width: 610px; margin-top: 22px; font-size: 16px; line-height: 1.58; }
+  .auth-lead { max-width: 640px; margin-top: 24px; font-size: 17px; line-height: 1.58; }
   .auth-benefits { gap: 12px; margin-top: 32px; }
   .auth-benefits article { min-height: 116px; padding: 16px; }
   .auth-radar { right: -110px; width: clamp(410px, 31vw, 590px); opacity: .72; }
   .auth-access { padding: clamp(54px, 5vw, 86px); }
-  .auth-panel { width: min(100%, 520px); }
-  .auth-heading h2 { font-size: 40px !important; }
+  .auth-panel { width: min(100%, 590px); }
+  .auth-heading h2 { font-size: 44px !important; }
   .auth-tabs { margin: 28px 0 25px; }
   .auth-panel-footer { margin-top: 28px; }
 }
@@ -2078,4 +2254,752 @@ html[data-theme="light"] .stage-card.hot small { color: #e8dfe4 !important; }
 @media (min-width: 1700px) and (min-height: 950px) {
   .auth-showcase { padding-left: max(88px, calc((100vw - 1720px) / 2 + 88px)); }
   .auth-panel { width: min(100%, 540px); }
+}
+
+/* WhatsApp comercial: seleção global do modelo e ação por lead. */
+.whatsapp-toolbar { display: flex; align-items: end; gap: 8px; }
+.whatsapp-toolbar label { display: grid; gap: 5px; min-width: 230px; }
+.whatsapp-toolbar label span { color: var(--faint); font-size: 9px !important; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+.whatsapp-toolbar select { min-height: 38px; padding: 0 34px 0 10px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--panel-soft); color: var(--ink); font-size: 12px !important; }
+.whatsapp-toolbar .secondary { min-height: 38px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 8px; background: transparent; color: var(--ink); font-size: 11px !important; font-weight: 800; white-space: nowrap; }
+.portfolio-lead-actions .whatsapp { border-color: #25d366; background: #25d366; color: #062b15; }
+.portfolio-lead-actions .whatsapp:hover { border-color: #45e47e; background: #45e47e; }
+.portfolio-lead-actions .whatsapp:disabled { border-color: var(--line); background: var(--panel-soft); color: var(--faint); cursor: not-allowed; opacity: .7; }
+.detail-whatsapp { width: 100%; min-height: 44px; margin-top: 14px; border: 1px solid #25d366; border-radius: 8px; background: #25d366; color: #062b15; font-size: 12px !important; font-weight: 850; cursor: pointer; }
+.detail-whatsapp:hover { background: #45e47e; }
+.detail-whatsapp:disabled { border-color: var(--line); background: var(--panel-soft); color: var(--faint); cursor: not-allowed; }
+
+.message-template-modal { position: fixed; z-index: 31; left: 50%; top: 50%; width: min(760px, calc(100vw - 28px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 30px; transform: translate(-50%,-50%) scale(.96); opacity: 0; pointer-events: none; border: 1px solid var(--line-strong); border-radius: 14px; background: var(--panel); box-shadow: 0 30px 100px #000b; color: var(--ink); transition: opacity .18s ease, transform .18s ease; }
+.message-template-modal.open { transform: translate(-50%,-50%) scale(1); opacity: 1; pointer-events: auto; }
+.message-template-modal .close { position: absolute; right: 16px; top: 14px; width: 38px; height: 38px; }
+.message-template-modal h2 { margin: 0; font-size: 28px !important; }
+.message-template-modal > p:not(.eyebrow) { max-width: 650px; margin: 8px 0 20px; color: var(--muted); font-size: 13px !important; line-height: 1.55; }
+.message-template-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; margin-bottom: 18px; }
+.message-template-item { display: grid; grid-template-columns: 1fr 38px; min-width: 0; border: 1px solid var(--line); border-radius: 9px; background: var(--panel-soft); overflow: hidden; }
+.message-template-item.active { border-color: color-mix(in srgb,#25d366 65%,var(--line)); box-shadow: inset 3px 0 #25d366; }
+.message-template-edit { display: flex; align-items: center; justify-content: space-between; min-width: 0; padding: 12px; border: 0; background: transparent; color: var(--ink); text-align: left; cursor: pointer; }
+.message-template-edit span { display: grid; min-width: 0; }
+.message-template-edit strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px !important; }
+.message-template-edit small { margin-top: 3px; color: var(--muted); font-size: 11px !important; }
+.message-template-edit em { color: var(--accent); font-size: 10px !important; font-style: normal; font-weight: 800; }
+.message-template-delete { border: 0; border-left: 1px solid var(--line); background: transparent; color: var(--faint); font-size: 19px; cursor: pointer; }
+.message-template-delete:hover { background: var(--accent-soft); color: var(--accent-strong); }
+.message-template-empty { grid-column: 1/-1; padding: 18px; border: 1px dashed var(--line-strong); color: var(--muted); text-align: center; }
+.message-template-form { padding-top: 18px; border-top: 1px solid var(--line); }
+.message-template-form > label { display: block; margin-top: 12px; color: var(--muted); font-size: 12px !important; font-weight: 750; }
+.message-template-form input[type="text"], .message-template-form input:not([type]), .message-template-form textarea { display: block; width: 100%; margin-top: 6px; padding: 11px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--panel-soft); color: var(--ink); font: inherit; }
+.message-template-form textarea { min-height: 126px; resize: vertical; line-height: 1.5; }
+.message-variable-help { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 9px; }
+.message-variable-help span { margin-right: 3px; color: var(--faint); font-size: 10px !important; }
+.message-variable-help button { min-height: 29px; padding: 0 9px; border: 1px solid var(--line); border-radius: 6px; background: transparent; color: var(--muted); font-size: 10px !important; cursor: pointer; }
+.message-variable-help button:hover { border-color: var(--accent); color: var(--ink); }
+.message-default-check { display: flex !important; align-items: center; gap: 8px; }
+.message-default-check input { width: 16px !important; height: 16px; margin: 0 !important; }
+.message-template-form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+.message-template-form-actions button { min-height: 42px; padding: 0 15px; border-radius: 8px; }
+.portfolio-utility-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.portfolio-utility-actions .secondary { min-height: 38px; padding: 0 12px; border-radius: 8px; }
+@media (max-width: 680px) {
+  .portfolio-utility-actions { width: 100%; }
+  .portfolio-utility-actions .secondary { flex: 1 1 180px; }
+}
+
+/* Correcoes do tema claro: contraste, navegacao completa e troca de tela sem
+   apagao visual. A barra lateral permanece deliberadamente escura. */
+html[data-theme="light"] .sidebar .brand-mark {
+  background: #f4f1f3;
+  border-color: #665b62;
+  color: #171419;
+}
+html[data-theme="light"] .sidebar .side-section,
+html[data-theme="light"] .sidebar .side-note,
+html[data-theme="light"] .sidebar .theme-choice,
+html[data-theme="light"] .sidebar .side-import {
+  border-color: #332d32;
+}
+html[data-theme="light"] .sidebar .side-note,
+html[data-theme="light"] .sidebar .side-import { background: #151216; }
+html[data-theme="light"] .sidebar .theme-choice { background: #0d0b0e; }
+html[data-theme="light"] .sidebar .theme-choice > div {
+  background: #080709;
+  border-color: #332d32;
+}
+html[data-theme="light"] .sidebar .side-note strong,
+html[data-theme="light"] .sidebar .data-status strong,
+html[data-theme="light"] .sidebar .side-import { color: #f7f3f5 !important; }
+html[data-theme="light"] .sidebar .side-note small,
+html[data-theme="light"] .sidebar .data-status small { color: #b7abb3 !important; }
+html[data-theme="light"] .sidebar .mini-icon { color: #f2dbe2; border-color: #5a4650; }
+html[data-theme="light"] .market-console .kpi.featured > strong,
+html[data-theme="light"] .market-console .kpi.featured h3 { color: #fff !important; }
+html[data-theme="light"] .market-console .kpi.featured .kpi-index,
+html[data-theme="light"] .market-console .kpi.featured .live { color: #e8bdc8 !important; }
+
+.app-view.view-entering { animation: none !important; }
+
+/* WhatsApp audit and configurable CRM export */
+.whatsapp-audit{margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(145deg,var(--panel),var(--panel-soft))}.whatsapp-audit-head{display:flex;align-items:center;justify-content:space-between;gap:18px}.whatsapp-audit-head>div{display:grid;gap:3px}.whatsapp-audit-head span{color:var(--accent-strong);font-size:10px;font-weight:900;letter-spacing:.08em}.whatsapp-audit-head strong{font-size:18px}.whatsapp-audit-head small{color:var(--muted);font-size:11px}.whatsapp-audit-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:13px}.whatsapp-audit-grid button{display:grid;grid-template-columns:1fr auto;gap:3px 10px;min-height:70px;padding:11px 13px;border:1px solid var(--line);border-radius:9px;background:var(--panel-raised);color:var(--text);text-align:left;cursor:pointer}.whatsapp-audit-grid button:hover,.whatsapp-audit-grid button.active{border-color:var(--accent);box-shadow:inset 3px 0 var(--accent)}.whatsapp-audit-grid button span{font-size:11px;font-weight:850}.whatsapp-audit-grid button b{grid-row:1/3;grid-column:2;font-size:24px}.whatsapp-audit-grid button small{color:var(--muted);font-size:9px}.whatsapp-status{display:inline-flex!important;align-items:center;padding:5px 7px;border:1px solid var(--line);border-radius:6px;font-size:9px!important;font-weight:850}.whatsapp-status.status-confirmed{border-color:#20b973;color:#2bd68a;background:#0e3b29}.whatsapp-status.status-not_found{border-color:#ef4565;color:#ff6380;background:#431724}.whatsapp-status.status-invalid{border-color:#ef9f32;color:#ffbb5a;background:#402c16}.whatsapp-result{width:auto;min-width:126px;height:36px;margin:0;padding:0 8px;border-radius:7px;font-size:10px}.export-crm-modal{position:fixed;z-index:31;left:50%;top:50%;width:min(900px,calc(100vw - 28px));max-height:calc(100dvh - 32px);overflow:auto;padding:30px;transform:translate(-50%,-50%) scale(.96);opacity:0;pointer-events:none;border:1px solid var(--line-strong);border-radius:14px;background:var(--panel);box-shadow:0 30px 100px #000b;color:var(--ink);transition:.18s}.export-crm-modal.open{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:auto}.export-crm-modal .close{position:absolute;right:16px;top:14px;width:38px;height:38px}.export-crm-modal h2{margin:0;font-size:28px!important}.export-crm-modal>p:not(.eyebrow){margin:8px 0 20px;color:var(--muted);font-size:13px}.export-crm-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px}.export-fields-head{display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-bottom:9px;border-bottom:1px solid var(--line)}.export-fields-head button{border:0;background:transparent;color:var(--accent-strong);font-weight:800;cursor:pointer}.export-field-list{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}.export-field-list label{display:flex;align-items:center;gap:8px;min-height:38px;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:var(--panel-soft);color:var(--text);font-size:10px;cursor:pointer}.export-field-list input{width:16px;height:16px;margin:0;accent-color:var(--accent)}.export-crm-actions{display:flex;align-items:center;justify-content:space-between;margin-top:18px;padding-top:15px;border-top:1px solid var(--line)}.export-crm-actions span{color:var(--muted);font-size:11px}
+@media(max-width:900px){.whatsapp-audit-grid{grid-template-columns:1fr 1fr}.export-crm-grid{grid-template-columns:1fr 1fr}.export-field-list{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.whatsapp-audit-head{align-items:flex-start;flex-direction:column}.whatsapp-audit-grid,.export-crm-grid,.export-field-list{grid-template-columns:1fr}.export-crm-modal{padding:58px 16px 20px}.export-crm-actions{align-items:stretch;flex-direction:column;gap:10px}.export-crm-actions button{width:100%}}
+body:not(.loading) .market-console,
+body:not(.loading) .analytics-toolbar,
+body:not(.loading) .analytics-panels .panel,
+body:not(.loading) .opportunity-card,
+body:not(.loading) .team-profile-card,
+body:not(.loading) .portfolio-board,
+body:not(.loading) .pipeline-section,
+body:not(.loading) .companies-section { animation: none !important; }
+
+/* O cursor permanece sobre o link depois do clique. O hover escuro não pode
+   sobrescrever o fundo claro do item ativo, senão o texto parece desaparecer. */
+.primary-navigation .nav-item.active:hover {
+  background: #f2f0f2 !important;
+  color: #1a171a !important;
+  border-color: #fff !important;
+}
+.primary-navigation .nav-item.active:hover small { color: #625a60 !important; }
+.primary-navigation .nav-item.active:hover > span:first-child { color: #86172f !important; }
+
+@media (min-width: 901px) {
+  .sidebar { padding-top: 18px; padding-bottom: 16px; }
+  .brand { padding-bottom: 17px; }
+  .sidebar .primary-navigation {
+    padding-top: 11px !important;
+    padding-bottom: 8px !important;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .nav-group { gap: 3px; margin-bottom: 8px; }
+  .nav-group-label { padding-bottom: 3px; font-size: 9px !important; }
+  .primary-navigation .nav-item {
+    min-height: 45px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+  .primary-navigation .nav-item b { font-size: 13px !important; }
+  .primary-navigation .nav-item small { margin-top: 1px; font-size: 10.5px !important; }
+  .side-section { padding-top: 10px; padding-bottom: 10px; }
+  .side-note { margin-bottom: 7px; padding-top: 9px; padding-bottom: 9px; }
+  .theme-choice { margin-bottom: 7px; padding: 7px; }
+  .theme-choice > span { margin-bottom: 5px; }
+  .theme-choice button { min-height: 30px; }
+  .side-import { min-height: 40px; }
+}
+
+@media (max-width: 1024px) {
+  .whatsapp-toolbar { width: 100%; align-items: stretch; }
+  .whatsapp-toolbar label { flex: 1; min-width: 0; }
+}
+@media (max-width: 600px) {
+  .whatsapp-toolbar { flex-direction: column; }
+  .whatsapp-toolbar .secondary { width: 100%; }
+  .portfolio-lead-actions { flex-wrap: wrap; }
+  .portfolio-lead-actions button { flex: 1 1 calc(50% - 4px); }
+  .portfolio-lead-actions .remove { flex-basis: 100%; }
+  .message-template-modal { padding: 60px 18px 22px; }
+  .message-template-list { grid-template-columns: 1fr; }
+  .message-template-form-actions { flex-direction: column-reverse; }
+  .message-template-form-actions button { width: 100%; }
+}
+
+/* CRM por conta: leitura executiva, tratamento e BI dos leads. */
+.crm-section-head { align-items: end; }
+.crm-board { display: grid; gap: 16px; }
+.crm-board .portfolio-board-head { margin: 0; }
+.portfolio-tip ol { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.crm-kpis { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 9px; }
+.crm-kpis article { min-width: 0; padding: 15px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-raised); }
+.crm-kpis span,.crm-insight-title span { display: block; color: var(--faint); font-size: 10px; font-weight: 850; letter-spacing: .1em; }
+.crm-kpis strong { display: block; overflow: hidden; margin-top: 8px; color: var(--text); font-size: clamp(19px,1.6vw,28px); line-height: 1.05; text-overflow: ellipsis; white-space: nowrap; }
+.crm-kpis small { display: block; margin-top: 6px; color: var(--muted); font-size: 11px; }
+.crm-kpis .positive { border-color: color-mix(in srgb,#22c55e 45%,var(--line)); background: color-mix(in srgb,#22c55e 8%,var(--panel-raised)); }
+.crm-kpis .positive strong { color: #25b45a; }
+.crm-kpis .danger { border-color: color-mix(in srgb,#e5484d 55%,var(--line)); background: color-mix(in srgb,#e5484d 8%,var(--panel-raised)); }
+.crm-kpis .danger strong { color: #e5484d; }
+.crm-insights { display: grid; grid-template-columns: minmax(0,1.35fr) minmax(280px,.65fr); gap: 10px; }
+.crm-insights > section { min-width: 0; padding: 15px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-soft); }
+.crm-insight-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.crm-insight-title small { color: var(--muted); font-size: 11px; }
+.crm-segment-list { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; }
+.crm-segment-list button { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: space-between; min-width: 0; min-height: 44px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-raised); color: var(--text); cursor: pointer; }
+.crm-segment-list button span { overflow: hidden; font-size: 11px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+.crm-segment-list button strong { color: var(--accent); font-size: 15px; }
+.crm-segment-list button i { position: absolute; inset: auto auto 0 0; width: var(--share); height: 2px; background: var(--accent); }
+.crm-segment-list button.active { border-color: var(--accent); background: color-mix(in srgb,var(--accent) 12%,var(--panel-raised)); }
+.crm-segment-list.outcomes { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+.crm-segment-list.outcomes > span { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 31px; padding: 0 8px; border-bottom: 1px solid var(--line); }
+.crm-segment-list.outcomes b { overflow: hidden; color: var(--muted); font-size: 11px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.crm-segment-list.outcomes strong { color: var(--text); font-size: 13px; }
+.crm-work-queue { display: grid; gap: 12px; padding: 15px; border: 1px solid var(--line); border-radius: 11px; background: linear-gradient(145deg,color-mix(in srgb,var(--accent) 5%,var(--panel-soft)),var(--panel-soft)); }
+.crm-queue-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; }
+.crm-queue-heading div span,.crm-queue-heading div strong { display: block; }
+.crm-queue-heading div span { color: var(--accent); font-size: 9px; font-weight: 900; letter-spacing: .13em; }
+.crm-queue-heading div strong { margin-top: 4px; color: var(--text); font-size: 15px; }
+.crm-queue-heading > small { color: var(--muted); font-size: 11px; }
+.crm-focus-tabs { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 7px; }
+.crm-focus-tabs button { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; min-height: 42px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-raised); color: var(--muted); cursor: pointer; }
+.crm-focus-tabs button span { overflow: hidden; font-size: 10px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.crm-focus-tabs button b { display: grid; flex: 0 0 auto; place-items: center; min-width: 23px; height: 23px; padding: 0 5px; border-radius: 6px; background: var(--panel-soft); color: var(--text); font-size: 10px; }
+.crm-focus-tabs button:hover,.crm-focus-tabs button.active { border-color: var(--accent); color: var(--text); }
+.crm-focus-tabs button.active { background: color-mix(in srgb,var(--accent) 13%,var(--panel-raised)); box-shadow: inset 3px 0 0 var(--accent); }
+.crm-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-soft); }
+.crm-lead-search { display: flex; align-items: center; flex: 1 1 320px; min-width: 220px; min-height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-raised); }
+.crm-lead-search span { color: var(--accent); font-size: 17px; }
+.crm-lead-search input { width: 100%; min-width: 0; padding: 0 9px; border: 0; outline: 0; background: transparent; color: var(--text); font-size: 12px; }
+.crm-lead-search input::placeholder { color: var(--faint); }
+.crm-toolbar .portfolio-view-switch { display: flex; min-width: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.crm-toolbar .portfolio-view-switch select + select { border-left: 1px solid var(--line); }
+.crm-toolbar select { min-height: 38px; padding: 0 32px 0 11px; border: 0; background: var(--panel-raised); color: var(--text); font-size: 12px; font-weight: 750; }
+.crm-layout-switch { display: flex; overflow: hidden; flex: 0 0 auto; border: 1px solid var(--line); border-radius: 8px; }
+.crm-layout-switch button { min-height: 37px; padding: 0 11px; border: 0; border-right: 1px solid var(--line); background: transparent; color: var(--muted); font-size: 11px; font-weight: 800; cursor: pointer; }
+.crm-layout-switch button:last-child { border-right: 0; }
+.crm-layout-switch button.active { background: var(--text); color: var(--bg); }
+.portfolio-lead.is-overdue { border-color: color-mix(in srgb,#e5484d 55%,var(--line)); }
+.portfolio-lead-identity { min-width: 0; }
+.portfolio-lead-commercial { display: grid; gap: 9px; margin-top: 10px; }
+.portfolio-values { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }
+.portfolio-values span { min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel-soft); }
+.portfolio-values small,.portfolio-values b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.portfolio-values small { color: var(--faint); font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.portfolio-values b { margin-top: 3px; color: var(--text); font-size: 13px; }
+.portfolio-next-action { min-height: 64px; border-radius: 8px; }
+.portfolio-next-action > span { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
+.portfolio-next-action.overdue { border-color: color-mix(in srgb,#e5484d 45%,var(--line)); background: color-mix(in srgb,#e5484d 7%,var(--panel-soft)); }
+.portfolio-next-action.overdue b { color: #e5484d; }
+.portfolio-leads.list-mode { grid-template-columns: 1fr; }
+.portfolio-leads.list-mode .portfolio-lead { display: grid; grid-template-columns: 145px minmax(190px,1.4fr) minmax(240px,1fr) minmax(190px,.8fr); align-items: center; gap: 14px; min-height: 0; }
+.portfolio-leads.list-mode .portfolio-lead-top { justify-content: start; }
+.portfolio-leads.list-mode .portfolio-lead-top .portfolio-star { order: -1; }
+.portfolio-leads.list-mode .portfolio-lead-actions { grid-column: 2/-1; padding-top: 0; }
+.portfolio-leads.list-mode .portfolio-next-action { margin: 0; }
+.portfolio-leads.list-mode .portfolio-lead h4 { margin-top: 0; }
+.team-editor-section-title { grid-column: 1/-1; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 6px; padding: 12px 0 2px; border-top: 1px solid var(--line); }
+.team-editor-section-title strong { color: var(--text); font-size: 13px; }
+.team-editor-section-title small { color: var(--faint); font-size: 10px; }
+.team-field-wide { grid-column: 1/-1; }
+
+html[data-theme="light"] .crm-kpis article,html[data-theme="light"] .crm-insights>section,html[data-theme="light"] .crm-toolbar,html[data-theme="light"] .crm-segment-list button,html[data-theme="light"] .portfolio-values span,html[data-theme="light"] .crm-focus-tabs button,html[data-theme="light"] .crm-lead-search { background: #fff; }
+
+@media (max-width: 1280px) {
+  .crm-kpis { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .crm-insights { grid-template-columns: 1fr; }
+  .crm-focus-tabs { grid-template-columns: repeat(4,minmax(0,1fr)); }
+  .portfolio-leads.list-mode .portfolio-lead { grid-template-columns: 120px minmax(180px,1fr) minmax(220px,1fr); }
+  .portfolio-leads.list-mode .portfolio-next-action { grid-column: 2/-1; }
+}
+@media (max-width: 900px) {
+  .crm-kpis { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .crm-focus-tabs { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .crm-toolbar { align-items: stretch; flex-direction: column; }
+  .crm-lead-search { flex-basis: auto; min-width: 0; }
+  .crm-toolbar .portfolio-view-switch { width: 100%; }
+  .crm-toolbar .portfolio-view-switch select { flex: 1; width: 50%; }
+  .crm-layout-switch { width: 100%; }
+  .crm-layout-switch button { flex: 1; }
+  .portfolio-leads.list-mode .portfolio-lead { display: flex; }
+  .portfolio-leads.list-mode .portfolio-lead-actions { width: 100%; }
+}
+@media (max-width: 600px) {
+  .crm-kpis { grid-template-columns: 1fr 1fr; gap: 7px; }
+  .crm-kpis article { padding: 12px; }
+  .crm-kpis article:last-child { grid-column: 1/-1; }
+  .crm-insights>section { padding: 12px; }
+  .crm-segment-list { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .crm-segment-list.outcomes { grid-template-columns: 1fr; }
+  .crm-queue-heading { align-items: flex-start; flex-direction: column; gap: 5px; }
+  .crm-focus-tabs { display: flex; overflow-x: auto; padding-bottom: 3px; scroll-snap-type: x proximity; }
+  .crm-focus-tabs button { flex: 0 0 135px; scroll-snap-align: start; }
+  .crm-toolbar .portfolio-view-switch { display: grid; grid-template-columns: 1fr; width: 100%; }
+  .crm-toolbar .portfolio-view-switch select { width: 100%; border: 0; }
+  .crm-toolbar .portfolio-view-switch select + select { border-top: 1px solid var(--line); border-left: 0; }
+  .team-editor-section-title { align-items: flex-start; flex-direction: column; }
+  .team-field-wide { grid-column: auto; }
+}
+/* RADAR TYPOGRAPHY SYSTEM V1 - START */
+/* Sistema tipográfico único do Radar:
+   - uma única família principal: Inter;
+   - escala legível e consistente;
+   - pesos profissionais;
+   - correções para desktop, tablet e celular.
+*/
+:root {
+  --font-ui: "Inter", sans-serif;
+  --fs-body: 16px;
+  --fs-caption: 13px;
+  --fs-label: 12px;
+  --fs-title: 32px;
+  --fs-card-title: 18px;
+  --sidebar: 250px;
+}
+
+html {
+  font-family: "Inter", sans-serif !important;
+  font-size: 16px;
+}
+
+body,
+body *,
+button,
+input,
+select,
+textarea,
+option {
+  font-family: "Inter", sans-serif !important;
+}
+
+body {
+  font-size: 16px !important;
+  line-height: 1.55 !important;
+  letter-spacing: -.004em !important;
+}
+
+button,
+input,
+select,
+textarea {
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+}
+
+strong,
+b,
+button {
+  font-weight: 700;
+}
+
+/* Barra superior */
+.crumb,
+.system-online {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: .09em !important;
+}
+
+.topbar button {
+  font-size: 13px !important;
+}
+
+/* Barra lateral */
+.brand strong {
+  font-size: 17px !important;
+  line-height: 1.15 !important;
+}
+
+.brand small {
+  font-size: 10.5px !important;
+  line-height: 1.4 !important;
+  letter-spacing: .16em !important;
+}
+
+.nav-group-label {
+  font-size: 10.5px !important;
+  font-weight: 750 !important;
+  letter-spacing: .11em !important;
+}
+
+.primary-navigation .nav-item {
+  min-height: 52px !important;
+  padding: 7px 10px !important;
+}
+
+.primary-navigation .nav-item b {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+}
+
+.primary-navigation .nav-item small {
+  margin-top: 2px !important;
+  font-size: 11.5px !important;
+  line-height: 1.3 !important;
+}
+
+.data-status strong,
+.side-note strong {
+  font-size: 13px !important;
+}
+
+.data-status small,
+.side-note small {
+  font-size: 11px !important;
+  line-height: 1.4 !important;
+}
+
+.theme-choice > span {
+  font-size: 10.5px !important;
+}
+
+.theme-choice button,
+.side-import {
+  font-size: 12px !important;
+}
+
+/* Títulos e introduções */
+.workspace-intro h1,
+.section-head h1 {
+  font-size: clamp(28px, 2.2vw, 36px) !important;
+  line-height: 1.08 !important;
+  letter-spacing: -.035em !important;
+  font-weight: 720 !important;
+}
+
+.workspace-intro h2,
+.section-head h2,
+.pipeline-head h2 {
+  font-size: clamp(24px, 1.8vw, 30px) !important;
+  line-height: 1.12 !important;
+  letter-spacing: -.025em !important;
+  font-weight: 720 !important;
+}
+
+.workspace-intro p,
+.section-head > div > p,
+.pipeline-head > div > p {
+  font-size: 16px !important;
+  line-height: 1.55 !important;
+}
+
+.eyebrow {
+  font-size: 11.5px !important;
+  font-weight: 750 !important;
+  letter-spacing: .12em !important;
+}
+
+/* Painel de Leads */
+.portfolio-board-head h3 {
+  font-size: 28px !important;
+  line-height: 1.1 !important;
+  letter-spacing: -.025em !important;
+  font-weight: 720 !important;
+}
+
+.portfolio-board-head > div > p,
+.portfolio-tip ol {
+  font-size: 13.5px !important;
+  line-height: 1.6 !important;
+}
+
+.whatsapp-toolbar label span {
+  font-size: 10.5px !important;
+  font-weight: 750 !important;
+}
+
+.whatsapp-toolbar select,
+.whatsapp-toolbar .secondary,
+.portfolio-utility-actions .secondary {
+  min-height: 42px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+
+/* Indicadores */
+.crm-kpis span,
+.crm-insight-title span {
+  font-size: 11.5px !important;
+  font-weight: 750 !important;
+  letter-spacing: .08em !important;
+}
+
+.crm-kpis strong {
+  font-size: clamp(26px, 1.7vw, 32px) !important;
+  font-weight: 720 !important;
+}
+
+.crm-kpis small {
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+}
+
+.crm-insight-title small {
+  font-size: 12.5px !important;
+}
+
+/* Etapas e resultados */
+.crm-segment-list button {
+  min-height: 48px !important;
+  padding: 0 12px !important;
+}
+
+.crm-segment-list button span {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+
+.crm-segment-list button strong {
+  font-size: 17px !important;
+}
+
+.crm-segment-list.outcomes > span {
+  min-height: 36px !important;
+}
+
+.crm-segment-list.outcomes b {
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+}
+
+.crm-segment-list.outcomes strong {
+  font-size: 14px !important;
+}
+
+/* Fila de trabalho */
+.crm-queue-heading div span {
+  font-size: 10.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: .11em !important;
+}
+
+.crm-queue-heading div strong {
+  font-size: 17px !important;
+  font-weight: 720 !important;
+}
+
+.crm-queue-heading > small {
+  font-size: 12.5px !important;
+}
+
+.crm-focus-tabs button {
+  min-height: 46px !important;
+  padding: 0 11px !important;
+}
+
+.crm-focus-tabs button span {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+.crm-focus-tabs button b {
+  min-width: 25px !important;
+  height: 25px !important;
+  font-size: 11.5px !important;
+}
+
+/* Pesquisa, filtros e visualização */
+.crm-lead-search {
+  min-height: 46px !important;
+}
+
+.crm-lead-search input {
+  font-size: 14px !important;
+}
+
+.crm-toolbar select {
+  min-height: 44px !important;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+}
+
+.crm-layout-switch button {
+  min-height: 43px !important;
+  padding: 0 14px !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+}
+
+.crm-layout-switch button.active {
+  background: var(--ink) !important;
+  color: var(--panel-raised) !important;
+  opacity: 1 !important;
+}
+
+html[data-theme="light"] .crm-layout-switch button:not(.active) {
+  color: #554e54 !important;
+  background: #fff !important;
+}
+
+html[data-theme="light"] .crm-layout-switch button.active {
+  color: #fff !important;
+  background: #1c181c !important;
+}
+
+/* Cartões dos leads */
+.portfolio-lead h4 {
+  font-size: 18px !important;
+  line-height: 1.25 !important;
+  letter-spacing: -.015em !important;
+  font-weight: 720 !important;
+}
+
+.portfolio-lead-identity > span,
+.portfolio-lead-identity > small,
+.portfolio-lead p {
+  font-size: 13.5px !important;
+  line-height: 1.45 !important;
+}
+
+.portfolio-lead-top > span:first-child {
+  font-size: 12px !important;
+  font-weight: 750 !important;
+  letter-spacing: .06em !important;
+}
+
+.portfolio-score {
+  font-size: 18px !important;
+}
+
+.portfolio-stage,
+.portfolio-result {
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+}
+
+.portfolio-values small {
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: .045em !important;
+}
+
+.portfolio-values b {
+  font-size: 14px !important;
+}
+
+.portfolio-next-action b {
+  font-size: 13px !important;
+}
+
+.portfolio-next-action > span {
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+}
+
+.portfolio-next-action time {
+  font-size: 12.5px !important;
+}
+
+.portfolio-lead-actions button,
+.detail-whatsapp {
+  min-height: 42px !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+}
+
+/* Equipe, formulários e mensagens */
+.team-profile-card h3,
+.team-editor-section-title strong {
+  font-size: 16px !important;
+}
+
+.team-profile-card p,
+.team-editor-section-title small,
+.message-template-edit small,
+.message-template-form > label {
+  font-size: 12.5px !important;
+}
+
+.message-template-edit strong {
+  font-size: 14px !important;
+}
+
+.message-template-edit em,
+.message-variable-help span,
+.message-variable-help button {
+  font-size: 11.5px !important;
+}
+
+/* Full HD */
+@media (min-width: 1440px) {
+  :root {
+    --sidebar: 260px;
+    --fs-body: 16px;
+  }
+
+  .content {
+    max-width: 1540px !important;
+  }
+
+  .portfolio-board,
+  .crm-board {
+    font-size: 16px !important;
+  }
+}
+
+/* Notebook e tablet */
+@media (max-width: 1280px) and (min-width: 901px) {
+  :root {
+    --sidebar: 240px;
+  }
+
+  .primary-navigation .nav-item b {
+    font-size: 13.5px !important;
+  }
+
+  .primary-navigation .nav-item small {
+    font-size: 11px !important;
+  }
+
+  .crm-focus-tabs button span {
+    font-size: 11.5px !important;
+  }
+}
+
+/* Celular */
+@media (max-width: 600px) {
+  body {
+    font-size: 15px !important;
+  }
+
+  .workspace-intro h1,
+  .workspace-intro h2,
+  .section-head h1,
+  .section-head h2,
+  .pipeline-head h2 {
+    font-size: 24px !important;
+  }
+
+  .portfolio-board-head h3 {
+    font-size: 23px !important;
+  }
+
+  .crm-kpis span,
+  .crm-insight-title span {
+    font-size: 10.5px !important;
+  }
+
+  .crm-kpis strong {
+    font-size: 25px !important;
+  }
+
+  .crm-kpis small,
+  .crm-insight-title small {
+    font-size: 12px !important;
+  }
+
+  .crm-focus-tabs button {
+    flex-basis: 145px !important;
+  }
+
+  .crm-focus-tabs button span {
+    font-size: 12px !important;
+  }
+
+  .portfolio-lead h4 {
+    font-size: 17px !important;
+  }
+}
+/* RADAR TYPOGRAPHY SYSTEM V1 - END */
+
+/* Alinhamento do cabecalho do Painel de Leads. */
+@media (min-width: 1025px) {
+  .portfolio-board-actions {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+  }
+
+  .whatsapp-toolbar,
+  .portfolio-utility-actions {
+    align-items: flex-end;
+  }
+
+  .portfolio-utility-actions {
+    flex-wrap: nowrap;
+  }
+
+  .whatsapp-toolbar select,
+  .whatsapp-toolbar .secondary,
+  .portfolio-utility-actions .secondary {
+    height: 42px;
+    min-height: 42px !important;
+    margin: 0;
+  }
 }

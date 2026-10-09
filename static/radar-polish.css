@@ -1,0 +1,149 @@
+/* Radar finish layer: identity and depth without altering application layouts. */
+:root {
+  --rp-ruby: #cb1245;
+  --rp-ruby-bright: #f12861;
+  --rp-highlight: #ff80a2;
+  --rp-surface: #17141c;
+  --rp-raised: #211a24;
+  --rp-border: #50404e;
+  --rp-text: #fcf8fb;
+  --rp-muted: #c8bdc8;
+  --rp-depth: 0 8px 24px #00000024, inset 0 1px 0 #ffffff0c;
+  --rp-control-depth: 0 2px 3px #00000024, inset 0 1px 0 #ffffff15;
+}
+html[data-theme=light] {
+  --rp-surface: #ffffff;
+  --rp-raised: #fcf7fa;
+  --rp-border: #d7c7d2;
+  --rp-text: #251a24;
+  --rp-muted: #665763;
+  --rp-highlight: #b50d3b;
+  --rp-depth: 0 6px 22px #3815270c, inset 0 1px 0 #fff;
+  --rp-control-depth: 0 2px 3px #3815270b, inset 0 1px 0 #fff;
+}
+body, button, input, select, textarea { font-family: Inter, sans-serif; }
+body { text-rendering: optimizeLegibility; }
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+:is(button,a,input,select,textarea,summary):focus-visible {
+  outline: 3px solid var(--rp-highlight); outline-offset: 3px;
+}
+body[data-view] {
+  background-image: radial-gradient(ellipse at 90% 0, #da16400b, transparent 55%);
+}
+:is(.ov-panel,.ov-toolbar,.crm-board,.bi-panel,.ad-card,.help-article,.help-category,.discovery-panel) {
+  border-color: var(--rp-border);
+  background-image: linear-gradient(135deg, #ffffff04, transparent 65%);
+  box-shadow: var(--rp-depth);
+}
+:is(.portfolio-lead,.company-preview-card,.ov-metric,.ad-metrics article,.crm-kpis article) {
+  border-color: var(--rp-border);
+  border-radius: 12px;
+  box-shadow: var(--rp-depth);
+}
+:is(.portfolio-lead,.company-preview-card) {
+  background-image: linear-gradient(145deg, #ffffff05, transparent 70%);
+}
+:is(.ov-metric,.crm-kpis article,.ad-metrics article) { position: relative; }
+:is(.ov-metric,.crm-kpis article,.ad-metrics article)::after {
+  content: ''; pointer-events: none; position: absolute; top: 0; left: 18px; right: 18px;
+  height: 1px; background: linear-gradient(90deg, transparent, #f1286155, transparent);
+}
+#overviewRoot .ov-metric-accent {
+  background: radial-gradient(ellipse at 90% 0, #ff72963b, transparent 65%), linear-gradient(120deg,#a80d36,#d7144b);
+  border-color: #e54c76; box-shadow: 0 8px 25px #b3093829, inset 0 1px 0 #ffffff30;
+}
+:is(.ov-metric>strong,.crm-kpis strong,.ad-metrics strong,#bi .kpi>strong,.portfolio-lead-values b) {
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: -.035em;
+}
+#bi .bi-group {
+  border-color: var(--rp-border); border-radius: 14px;
+  background: var(--rp-surface); box-shadow: var(--rp-depth);
+}
+#bi .bi-group>header {
+  border-radius: 13px 13px 0 0;
+  background: linear-gradient(100deg,#d51a4c16,transparent 70%);
+}
+#bi .bi-panel {
+  border-color: var(--rp-border); border-radius: 10px;
+  background: linear-gradient(140deg,#ffffff03,transparent),var(--rp-surface);
+}
+#bi .bi-panel::before { background: linear-gradient(90deg,#fc2b61,transparent 75%); }
+#bi .bi-panel h4 { font-size: 20px; line-height: 1.35; }
+#bi :is(.quality-list span,.quality-list b,.matrix-cell small,.bi-table-wrap td,.ranking-table td) {
+  font-size: 14px;
+}
+#bi :is(.bi-panel-head small,.bi-panel-head>b,.radar-chart-table summary) { font-size: 13px; color: var(--rp-muted); }
+#bi .radar-chart-table { border: 1px solid var(--rp-border); border-radius: 7px; padding: 10px 12px; }
+#bi .radar-chart-table summary { cursor: pointer; }
+#bi .radar-chart-table table { margin-top: 12px; }
+#bi .radar-chart-table td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+:is(.primary,.ad-button.primary,.help-app .help-primary,.discovery-primary,#overviewRoot .ov-button.ov-primary) {
+  background: linear-gradient(165deg,#dd2052,#bb0d3a);
+  border: 1px solid #e64872; color: #fff;
+  box-shadow: 0 3px 0 #7d0c2b, 0 6px 14px #bd0c3820, inset 0 1px 0 #ffffff26;
+}
+:is(.secondary,.ad-button:not(.primary),#overviewRoot .ov-button:not(.ov-primary),.radar-quick-nav) {
+  box-shadow: var(--rp-control-depth);
+}
+:is(.primary,.secondary,.ad-button,.help-app button,#overviewRoot .ov-button,.discovery-primary,.portfolio-lead-actions button) {
+  transition: background-color .16s, border-color .16s, box-shadow .16s, transform .16s;
+}
+:is(.primary,.ad-button.primary,.help-app .help-primary,#overviewRoot .ov-button.ov-primary):disabled {
+  box-shadow: none; transform: none; cursor: not-allowed;
+}
+:is(.primary,.ad-button.primary,.help-app .help-primary,#overviewRoot .ov-button.ov-primary):active:not(:disabled) {
+  transform: translateY(1px); box-shadow: inset 0 2px 4px #51051b33;
+}
+.sidebar { background-image: linear-gradient(160deg,#b61a3e0b,transparent 40%); }
+.primary-navigation .nav-item.active {
+  box-shadow: inset 3px 0 #de164b, 0 3px 10px #0002;
+}
+body[data-view] .topbar,.ad-topbar { box-shadow: 0 2px 12px #0000000c; }
+.content :is(input,select,textarea),.ad-content :is(input,select,textarea) {
+  box-shadow: inset 0 1px 2px #00000008;
+}
+.access-story {
+  background: radial-gradient(ellipse at 100% 50%,#88103888,transparent 65%),linear-gradient(145deg,#100b13,#09080c);
+}
+.access-story::before {
+  background-image: linear-gradient(#ffffff05 1px,transparent 1px),linear-gradient(90deg,#ffffff05 1px,transparent 1px);
+}
+.access-capabilities article { box-shadow: inset 0 1px 0 #ffffff12, 0 8px 22px #0002; }
+.access-submit {
+  background: linear-gradient(160deg,#dc1d51,#b90b39);
+  box-shadow: 0 3px 0 #7d0c2b, 0 12px 24px #a9083226, inset 0 1px 0 #ffffff30;
+}
+.access-entry footer { font-size: 13px; }
+@media (hover:hover) and (prefers-reduced-motion:no-preference) {
+  :is(.primary,.ad-button.primary,#overviewRoot .ov-button.ov-primary):hover:not(:disabled) {
+    background: linear-gradient(160deg,#e42b60,#c21143); transform: translateY(-1px);
+    box-shadow: 0 4px 0 #7d0c2b, 0 9px 18px #bd0c3830, inset 0 1px 0 #ffffff26;
+  }
+  :is(.portfolio-lead,.company-preview-card):hover {
+    border-color: #d82b5c; box-shadow: 0 10px 26px #0002, inset 0 1px 0 #ff4c731a;
+  }
+}
+@media(max-width:650px) {
+  #bi .bi-panel h4 { font-size: 19px; }
+  #bi :is(.quality-list span,.quality-list b,.matrix-cell small) { font-size: 13px; }
+}
+@media(max-width:600px) {
+  body[data-view] .topbar { gap:4px; padding:0 8px; }
+  body[data-view] .top-actions { gap:4px; min-width:0; flex:1; justify-content:flex-end; }
+  body[data-view] .topbar :is(.menu,.icon-btn,.avatar,.radar-quick-nav,.discovery-bell) {
+    width:44px; min-width:44px; height:44px; min-height:44px; flex-shrink:0; padding:0;
+  }
+  body[data-view] .topbar .radar-quick-nav { font-size:0!important; justify-content:center; gap:0; }
+  body[data-view] .topbar .radar-quick-nav :is(span,kbd) { display:none; }
+  body[data-view] .topbar .radar-quick-nav::after { content:'⌕'; font-size:25px; }
+  body[data-view] .topbar .radar-help-shortcut::after { content:'?'; font-size:21px; font-weight:700; }
+  body[data-view] .topbar .discovery-bell svg { width:20px; height:20px; flex-shrink:0; display:block; }
+  body[data-view] .topbar .discovery-bell-label { display:none; }
+}
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after { transition:none!important; animation:none!important; scroll-behavior:auto!important; }
+}
+@media print {
+  :is(.ov-panel,.bi-panel,.ad-card,.portfolio-lead,.company-preview-card,.ov-metric) { box-shadow:none; }
+}

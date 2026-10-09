@@ -1,0 +1,13 @@
+{
+  "name": "radar-safe-collector",
+  "private": true,
+  "type": "module",
+  "scripts": {"test": "node --test tests/*.test.mjs"},
+  "dependencies": {
+    "@crawlee/basic": "3.18.2",
+    "@crawlee/core": "3.18.2",
+    "cheerio": "1.2.0",
+    "ipaddr.js": "2.5.0",
+    "robots-parser": "3.0.1"
+  }
+}

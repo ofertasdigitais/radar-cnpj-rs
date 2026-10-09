@@ -1,0 +1,23 @@
+{
+  "packages": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "scheduler": "0.28.0",
+    "echarts": "6.1.0",
+    "tslib": "2.3.0",
+    "zrender": "6.1.0",
+    "libphonenumber-js": "1.13.14",
+    "papaparse": "5.7.0",
+    "pdf-lib": "1.17.1",
+    "@pdf-lib/standard-fonts": "1.0.0",
+    "pako": "1.0.11",
+    "@pdf-lib/upng": "1.0.1",
+    "@pdf-lib/fontkit": "1.1.1",
+    "lucide": "1.52.0"
+  },
+  "assets": {
+    "radar-libraries.js": "6c30c09befb5d4a37a092cf88a44dc32f52dd3205e4afdd26f350ffac63b3645",
+    "radar-charts.js": "40c71d5eeb9b2705d79c1b441b869516185a880b9cb3bff661487ce8cc73ee39",
+    "radar-pdf.js": "4c9be97a6023be8e1486ce00f6ceec42b20d64f8f83bced9d755da3c1fc22f4f"
+  }
+}
