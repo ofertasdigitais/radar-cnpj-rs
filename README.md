@@ -1,5 +1,7 @@
 # Radar CNPJ RS
 
+Estado atual e limites da implantação: [situação em 14/10/2026](docs/STATUS-20261014.md).
+
 Aplicação web para consultar empresas abertas recentemente no Rio Grande do Sul, com filtros por período, CNAE, segmento, município, região, situação cadastral e MEI.
 
 ## Estado desta versão — 09/10/2026
@@ -13,6 +15,7 @@ legado não tem paridade com todas as funções atuais. Não publique essa pasta
 nem execute migrações remotas antes de fechar os bloqueios documentados.
 
 - [Validações e limites desta entrega](docs/ENTREGA-QA-20261009.md)
+- [Segurança, interface e ambiente isolado](docs/SEGURANCA-E-INTERFACE.md)
 - [Auditoria, correções e preparação de migração](docs/AUDITORIA-RADAR-20261007.md)
 - [Administração e parâmetros](docs/ADMIN-20261007.md)
 - [Central de Ajuda](docs/AJUDA-E-QUALIFICACAO-20261007.md)
