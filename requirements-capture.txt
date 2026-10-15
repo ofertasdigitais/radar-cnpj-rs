@@ -1,3 +1,5 @@
 # Dependências gratuitas do índice OSM local; usadas pelo importador regional.
 osmium==4.3.1
 shapely==2.1.2
+# Transitive HTTP security floor for osmium/requests, isolated to Radar's venv.
+urllib3==2.8.0

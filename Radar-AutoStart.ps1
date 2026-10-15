@@ -22,6 +22,13 @@ $serverErrorLog = Join-Path $dataDir "radar-server-error.log"
 $tunnelOutLog = Join-Path $dataDir "cloudflared.log"
 $tunnelErrorLog = Join-Path $dataDir "cloudflared-error.log"
 $localUrl = "http://127.0.0.1:8000"
+
+
+function Get-RadarPython {
+    $radarPythonPath = Join-Path $projectDir ".venv\Scripts\python.exe"
+    if (Test-Path -LiteralPath $radarPythonPath -PathType Leaf) { return [pscustomobject]@{ Source = $radarPythonPath } }
+    return Get-Command python -ErrorAction SilentlyContinue
+}
 $taskName = "Radar CNPJ RS - Inicio automatico"
 $runValueName = "Radar CNPJ RS"
 
@@ -165,7 +172,10 @@ try {
     if ($RecarregarServidor) {
         if (-not (Test-Path -LiteralPath $pidFile)) { throw "O registro dos processos do Radar nao foi encontrado." }
         $record = Get-Content -LiteralPath $pidFile -Raw | ConvertFrom-Json
-        $serverProcess = Get-Process -Id ([int]$record.serverPid) -ErrorAction SilentlyContinue
+        $listener = Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
+        $serverProcess = if ($listener -and $listener.OwningProcess -eq [int]$record.serverPid) {
+            Get-Process -Id ([int]$record.serverPid) -ErrorAction SilentlyContinue
+        } else { $null }
         # O inicializador interativo usa outro registro. Só adote o processo
         # que também possui a porta local do Radar; não mate um PID antigo.
         if (-not $serverProcess) {
@@ -218,7 +228,7 @@ try {
         $env:RADAR_DATA_DIR = $dataDir
         $env:PYTHONUNBUFFERED = "1"
 
-        $python = Get-Command python -ErrorAction SilentlyContinue
+        $python = Get-RadarPython
         if (-not $python) { throw "Python nao foi encontrado no PATH do Windows." }
         $newServer = Start-Process -FilePath $python.Source -ArgumentList @("app.py") -WorkingDirectory $projectDir -RedirectStandardOutput $serverOutLog -RedirectStandardError $serverErrorLog -WindowStyle Hidden -PassThru
         $record.serverPid = $newServer.Id
@@ -242,7 +252,7 @@ try {
         }
     }
 
-    $python = Get-Command python -ErrorAction SilentlyContinue
+    $python = Get-RadarPython
     if (-not $python) { throw "Python nao foi encontrado no PATH do Windows." }
     if (-not (Test-Path -LiteralPath (Join-Path $projectDir "app.py"))) { throw "app.py nao foi encontrado em $projectDir." }
     if (-not (Test-Path -LiteralPath $credentialFile)) { throw "Execute INICIAR RADAR.cmd uma vez para criar o acesso administrativo." }

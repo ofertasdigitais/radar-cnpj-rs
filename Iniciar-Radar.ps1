@@ -17,6 +17,13 @@ $tunnelOutLog = Join-Path $dataDir "cloudflared.log"
 $tunnelErrorLog = Join-Path $dataDir "cloudflared-error.log"
 $localUrl = "http://127.0.0.1:8000"
 
+
+function Get-RadarPython {
+    $radarPythonPath = Join-Path $projectDir ".venv\Scripts\python.exe"
+    if (Test-Path -LiteralPath $radarPythonPath -PathType Leaf) { return [pscustomobject]@{ Source = $radarPythonPath } }
+    return Get-Command python -ErrorAction SilentlyContinue
+}
+
 function Write-Step([string]$Message) {
     Write-Host "`n>> $Message" -ForegroundColor Cyan
 }
@@ -153,7 +160,7 @@ try {
     Write-Host "       RADAR CNPJ RS - INICIALIZADOR" -ForegroundColor White
     Write-Host "============================================" -ForegroundColor DarkRed
 
-    $python = Get-Command python -ErrorAction SilentlyContinue
+    $python = Get-RadarPython
     if (-not $python) { throw "Python nao foi encontrado no PATH do Windows." }
     $cloudflared = Get-Command cloudflared -ErrorAction SilentlyContinue
     if (-not $cloudflared) { throw "cloudflared nao foi encontrado no PATH do Windows." }
