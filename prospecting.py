@@ -2,6 +2,7 @@
 import hashlib
 import re
 import uuid
+import company_access
 from datetime import datetime
 from urllib.parse import urlparse
 
@@ -46,7 +47,7 @@ def qualify(db,owner,payload):
     db.execute('BEGIN IMMEDIATE')
     contact=db.execute('SELECT * FROM prospect_inbox WHERE id=? AND owner_id=?',(identifier,owner)).fetchone()
     if not contact or not db.execute('SELECT 1 FROM sales_profiles WHERE id=? AND owner_id=?',(profile,owner)).fetchone():raise LookupError('Contato ou responsável não encontrado nesta conta')
-    if not db.execute('SELECT 1 FROM companies WHERE cnpj=?',(cnpj,)).fetchone():raise LookupError('CNPJ não encontrado na base oficial. O contato externo foi preservado.')
+    if not company_access.available(db,cnpj,owner):raise LookupError('CNPJ não encontrado na base disponível. O contato externo foi preservado.')
     already=db.execute('SELECT 1 FROM sales_profile_leads WHERE profile_id=? AND cnpj=?',(profile,cnpj)).fetchone()
     other=db.execute("SELECT 1 FROM sales_profile_leads WHERE cnpj=? AND profile_id<>? AND lead_status NOT IN ('convertido','descartado')",(cnpj,profile)).fetchone()
     if other and not already and payload.get('allow_duplicate') is not True:raise FileExistsError('Empresa em outro atendimento ativo. Confirme a duplicação da abordagem.')

@@ -1,6 +1,7 @@
 import sqlite3
 import unittest
 from app import filters
+import company_access
 
 
 class SegmentationTests(unittest.TestCase):
@@ -17,7 +18,9 @@ class SegmentationTests(unittest.TestCase):
             CREATE TABLE sales_profile_leads(profile_id TEXT,cnpj TEXT,lead_status TEXT);
             INSERT INTO sales_profiles VALUES('a','conta-a'),('b','conta-b');
             INSERT INTO sales_profile_leads VALUES('a','1','qualificado'),('b','2','contatado');
+            ALTER TABLE companies ADD COLUMN situacao TEXT DEFAULT 'ATIVA';
         """)
+        company_access.ensure_schema(self.db)
 
     def results(self, params, owner='conta-a'):
         where,values=filters({key:[value] for key,value in params.items()},owner_id=owner)

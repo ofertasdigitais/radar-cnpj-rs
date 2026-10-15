@@ -15,7 +15,8 @@ import uuid
 from http.cookies import SimpleCookie
 from datetime import date, timedelta, datetime
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
-from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler
+from security import BoundedHTTPServer as ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
@@ -30,6 +31,7 @@ import security
 import admin_panel
 import admin_http
 import help_center
+import company_access
 
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = Path(os.environ.get("RADAR_DATA_DIR", ROOT / "data")).resolve()
@@ -75,8 +77,9 @@ ACCOUNT_COMPANY_SOURCE = """(
     COALESCE(acs.lead_status,'novo') AS lead_status,
     COALESCE(acs.favorito,0) AS favorito,
     COALESCE(acs.observacoes,'') AS observacoes
-  FROM companies c
-  LEFT JOIN account_company_state acs ON acs.cnpj=c.cnpj AND acs.account_id=?
+  FROM companies c CROSS JOIN (SELECT ? AS account_id) access_scope
+  LEFT JOIN account_company_state acs ON acs.cnpj=c.cnpj AND acs.account_id=access_scope.account_id
+  WHERE """ + company_access.visible('c', 'access_scope.account_id') + """
 ) AS companies"""
 
 
@@ -283,6 +286,7 @@ def init_db():
         discovery.ensure_schema(db)
         admin_panel.ensure_schema(db)
         help_center.ensure_schema(db)
+        company_access.ensure_schema(db)
         db.execute("PRAGMA optimize")
 
 
@@ -398,7 +402,7 @@ def account_by_login(login):
 
 
 def filters(params, exclude=(), owner_id=None):
-    clauses = ["uf='RS'"]; values = []
+    clauses = ["uf='RS'", "COALESCE(situacao,'')<>'TESTE'", "NOT EXISTS (SELECT 1 FROM private_companies pc WHERE pc.cnpj=companies.cnpj)"]; values = []
     mappings = {"inicio":("data_abertura >= ?",None),"fim":("data_abertura <= ?",None),"municipio":("municipio = ?",None),"regiao":("regiao = ?",None),"segmento":("segmento = ?",None),"situacao":("situacao = ?",None),"mei":("mei = ?", lambda x: 1 if x == "sim" else 0),"contato":("CASE WHEN TRIM(COALESCE(email,''))<>'' OR TRIM(COALESCE(telefone,''))<>'' THEN 1 ELSE 0 END = ?",lambda x: 1 if x == "sim" else 0),"lead_status":("COALESCE(NULLIF(lead_status,''),'novo') = ?",None),"favorito":("favorito = ?",lambda x: 1 if x == "sim" else 0)}
     for key, (sql, convert) in mappings.items():
         if key in exclude: continue
@@ -430,7 +434,7 @@ def filters(params, exclude=(), owner_id=None):
             clauses.append(f"TRIM(COALESCE({column},'')) {'<>' if value == 'sim' else '='} ''")
     work_stage = params.get('work_stage', [''])[0]
     if 'work_stage' not in exclude and work_stage:
-        scope = "EXISTS (SELECT 1 FROM sales_profile_leads wl JOIN sales_profiles wp ON wp.id=wl.profile_id WHERE wp.owner_id=? AND wl.cnpj=companies.cnpj"
+        scope = "EXISTS (SELECT 1 FROM accessible_sales_profile_leads wl JOIN sales_profiles wp ON wp.id=wl.profile_id WHERE wp.owner_id=? AND wl.cnpj=companies.cnpj"
         if not owner_id:
             clauses.append('0=1')
         else:
@@ -473,6 +477,12 @@ def score_company(company):
     return min(score, 100)
 
 
+class RequestInputError(Exception):
+    def __init__(self, message, status=400):
+        self.status = status
+        super().__init__(message)
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = 'Radar'
     sys_version = ''
@@ -482,14 +492,51 @@ class Handler(BaseHTTPRequestHandler):
         self.connection.settimeout(20)
 
     def guard_write(self):
+        if not self.guard_host(): return False
         if not security.same_origin(self.headers):
             self.send_json({'erro':'Origem da requisição não permitida'},403); return False
         try: length=int(self.headers.get('Content-Length','0'))
         except ValueError: length=-1
-        if length<0 or length>2*1024*1024 or self.headers.get('Transfer-Encoding'):
+        if length<0 or length>2*1024*1024 or self.headers.get('Transfer-Encoding') or len(self.headers.get_all('Content-Length',[]))>1:
             self.close_connection=True
             self.send_json({'erro':'Corpo da requisição inválido ou acima de 2 MB'},413);return False
         return True
+
+    def guard_host(self):
+        if len(self.headers.get_all('Host', []))!=1 or not security.allowed_host(self.headers.get('Host',''), DATA_DIR/'public-url.txt'):
+            self.close_connection = True
+            self.send_json({'erro': 'Host não autorizado'}, 403)
+            return False
+        return True
+
+    def guard_api_budget(self):
+        if not self.path.startswith('/api/') or getattr(self, '_api_budget_checked', False): return True
+        self._api_budget_checked = True
+        budget = self.server.api_reads if self.command=='GET' else self.server.api_writes
+        identity = self.session_identity()
+        key = identity[0].casefold() if identity else 'client:' + self.client_address[0]
+        if budget.allowed(key): return True
+        self.send_json({'erro':'Muitas solicitações. Aguarde um minuto antes de tentar novamente.'},429)
+        return False
+
+    def read_json_object(self, limit):
+        length = int(self.headers.get('Content-Length', '0'))
+        if length > limit:
+            self.close_connection = True
+            raise RequestInputError('Solicitação acima do limite permitido', 413)
+        try:
+            payload = json.loads(self.rfile.read(length) or b'{}')
+        except (ValueError, UnicodeDecodeError, RecursionError):
+            raise RequestInputError('JSON inválido') from None
+        if not isinstance(payload, dict):
+            raise RequestInputError('O corpo da solicitação deve ser um objeto JSON')
+        return payload
+
+    def dispatch_write(self, handler):
+        try:
+            return handler()
+        except RequestInputError as error:
+            return self.send_json({'erro': str(error)}, error.status)
 
     def session_token(self, username, *, bootstrap_admin=False):
         secret = security.session_secret()
@@ -643,14 +690,14 @@ class Handler(BaseHTTPRequestHandler):
         with connect() as db:
             has_accounts = bool(db.execute("SELECT 1 FROM user_accounts WHERE is_active=1 LIMIT 1").fetchone())
         if not security.production() and (not username or not password) and not has_accounts:
-            return True
-        if self.valid_session(): return True
+            return self.guard_api_budget()
+        if self.valid_session(): return self.guard_api_budget()
         header = self.headers.get("Authorization", "")
         if not security.production() and username and password and header.startswith("Basic "):
             try:
                 supplied = base64.b64decode(header[6:]).decode("utf-8")
                 expected = f"{username}:{password}"
-                if hmac.compare_digest(supplied, expected): return True
+                if hmac.compare_digest(supplied, expected): return self.guard_api_budget()
             except (ValueError, UnicodeDecodeError):
                 pass
         if self.path.startswith("/api/"):
@@ -683,6 +730,7 @@ class Handler(BaseHTTPRequestHandler):
         self.security_headers(); self.end_headers(); self.wfile.write(body)
 
     def do_GET(self):
+        if not self.guard_host(): return
         parsed = urlparse(self.path)
         if parsed.path == "/healthz":
             try:
@@ -695,7 +743,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.security_headers(); self.end_headers(); return
             mode = parse_qs(parsed.query).get("mode", ["login"])[0]
             return self.render_auth_page(mode)
-        if parsed.path in ("/style.css", "/visual.css", "/auth.js", "/icon.svg", "/react-login.css", "/react-login.js") or parsed.path.startswith("/fonts/"):
+        if parsed.path in ("/style.css", "/visual.css", "/auth.js", "/icon.svg", "/react-login.css", "/react-login.js", "/radar-polish.css") or parsed.path.startswith("/fonts/"):
             if not security.safe_static_path(parsed.path): return self.send_error(404)
             try:
                 path = (STATIC / parsed.path.lstrip("/")).resolve()
@@ -706,6 +754,10 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(200); self.send_header("Content-Type",mimetypes.guess_type(path)[0] or "application/octet-stream")
             self.send_header("Content-Length",str(len(data))); self.security_headers(); self.end_headers(); self.wfile.write(data); return
         if parsed.path == "/logout":
+            identity = self.session_identity()
+            if identity:
+                with connect() as db:
+                    admin_panel.revoke_sessions(db, identity[0])
             self.send_response(303); self.send_header("Location","/login")
             self.send_header("Set-Cookie","radar_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0")
             self.security_headers(); self.end_headers(); return
@@ -796,7 +848,7 @@ class Handler(BaseHTTPRequestHandler):
                     WHERE id=? AND (is_system=1 OR owner_id=?)""", (profile_id, self.session_owner_id())).fetchone()
                 if not profile:
                     return self.send_json({"erro": "Perfil não encontrado"}, 404)
-                total = db.execute("SELECT COUNT(*) FROM profile_leads WHERE profile_id=?", (profile_id,)).fetchone()[0]
+                total = db.execute(f"SELECT COUNT(*) FROM profile_leads pl JOIN {ACCOUNT_COMPANY_SOURCE} ON companies.cnpj=pl.cnpj WHERE profile_id=?", (self.session_owner_id(),profile_id)).fetchone()[0]
                 rows = db.execute(f"""SELECT companies.*, pl.added_at AS carteira_adicionado_em
                     FROM profile_leads pl JOIN {ACCOUNT_COMPANY_SOURCE} ON companies.cnpj=pl.cnpj
                     WHERE pl.profile_id=?
@@ -854,8 +906,16 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == '/api/commercial-archive':
             params = parse_qs(parsed.query);profile_id=str(params.get('profile_id',[''])[0])
             with connect() as db:
-                if not self.owned_sales_profile(db,profile_id): return self.send_json({'erro':'Área não encontrada'},404)
-                items=[dict(x) for x in db.execute('SELECT * FROM commercial_archive WHERE profile_id=? ORDER BY id DESC LIMIT 100',(profile_id,))]
+                profile = self.owned_sales_profile(db,profile_id)
+                if not profile: return self.send_json({'erro':'Área não encontrada'},404)
+                # Legacy archives are another copy of a contact. Keep official
+                # history even when RF removes a company; deny private copies
+                # whose canonical owner does not match the selected profile.
+                visible = company_access.visible('c', '?')
+                items=[dict(x) for x in db.execute(f'''SELECT a.* FROM commercial_archive a
+                    WHERE a.profile_id=? AND NOT EXISTS (
+                      SELECT 1 FROM companies c WHERE c.cnpj=a.cnpj AND NOT {visible})
+                    ORDER BY a.id DESC LIMIT 100''',(profile_id, profile['owner_id'] or self.session_owner_id()))]
             return self.send_json({'items':items})
         if parsed.path == '/api/prospects':
             params = parse_qs(parsed.query)
@@ -890,7 +950,7 @@ class Handler(BaseHTTPRequestHandler):
             cnpj=parse_qs(parsed.query).get('cnpj',[''])[0]
             if not re.fullmatch('[A-Z0-9]{14}',cnpj):return self.send_json({'erro':'CNPJ inválido'},400)
             with connect() as db:
-                row=db.execute('SELECT cnpj,razao_social,nome_fantasia,municipio,situacao FROM companies WHERE cnpj=?',(cnpj,)).fetchone()
+                row=db.execute(f'SELECT cnpj,razao_social,nome_fantasia,municipio,situacao FROM {ACCOUNT_COMPANY_SOURCE} WHERE cnpj=?',(self.session_owner_id(),cnpj)).fetchone()
             return self.send_json({'item':dict(row) if row else None})
         if parsed.path=='/api/prospects/history':
             identifier=parse_qs(parsed.query).get('id',[''])[0]
@@ -905,7 +965,7 @@ class Handler(BaseHTTPRequestHandler):
                     COALESCE(SUM(CASE WHEN spl.favorito=1 THEN 1 ELSE 0 END),0) AS favorite_count,
                     MAX(spl.updated_at) AS last_activity
                     FROM sales_profiles p
-                    LEFT JOIN sales_profile_leads spl ON spl.profile_id=p.id
+                    LEFT JOIN accessible_sales_profile_leads spl ON spl.profile_id=p.id
                     WHERE {scope}
                     GROUP BY p.id ORDER BY p.name COLLATE NOCASE""", scope_values).fetchall()
             return self.send_json({"items": [dict(row) for row in rows], "can_manage_team": self.session_is_admin()})
@@ -935,13 +995,13 @@ class Handler(BaseHTTPRequestHandler):
                     COALESCE(SUM(CASE WHEN lead_status='convertido' THEN closed_value_cents ELSE 0 END),0) AS closed_value_cents,
                     ROUND(AVG(CASE WHEN first_contact_at>=added_at THEN julianday(first_contact_at)-julianday(added_at) END),1) AS avg_first_contact_days,
                     ROUND(AVG(CASE WHEN lead_status='convertido' AND closed_at>=added_at THEN julianday(closed_at)-julianday(added_at) END),1) AS avg_close_days
-                    FROM sales_profile_leads WHERE profile_id=?""", (profile_id,)).fetchone())
+                    FROM accessible_sales_profile_leads WHERE profile_id=?""", (profile_id,)).fetchone())
                 stages = [dict(row) for row in db.execute("""SELECT lead_status AS key,COUNT(*) AS total,
                     COALESCE(SUM(negotiated_value_cents),0) AS negotiated_value_cents,
                     COALESCE(SUM(closed_value_cents),0) AS closed_value_cents
-                    FROM sales_profile_leads WHERE profile_id=? GROUP BY lead_status ORDER BY total DESC""", (profile_id,))]
+                    FROM accessible_sales_profile_leads WHERE profile_id=? GROUP BY lead_status ORDER BY total DESC""", (profile_id,))]
                 outcomes = [dict(row) for row in db.execute("""SELECT COALESCE(NULLIF(contact_outcome,''),'nao_informado') AS key,COUNT(*) AS total
-                    FROM sales_profile_leads WHERE profile_id=? GROUP BY COALESCE(NULLIF(contact_outcome,''),'nao_informado') ORDER BY total DESC""", (profile_id,))]
+                    FROM accessible_sales_profile_leads WHERE profile_id=? GROUP BY COALESCE(NULLIF(contact_outcome,''),'nao_informado') ORDER BY total DESC""", (profile_id,))]
             summary["contact_rate"] = round((summary.get("contacted") or 0) * 100 / (summary.get("total") or 1), 1)
             return self.send_json({"profile": dict(profile), "summary": summary, "stages": stages, "outcomes": outcomes})
         if parsed.path == "/api/team-leads":
@@ -1029,7 +1089,7 @@ class Handler(BaseHTTPRequestHandler):
                 profile = self.owned_sales_profile(db, profile_id)
                 if not profile:
                     return self.send_json({"erro": "Área comercial não encontrada para esta conta"}, 404)
-                total = db.execute(f"SELECT COUNT(*) FROM sales_profile_leads spl JOIN companies c ON c.cnpj=spl.cnpj WHERE {condition}", values).fetchone()[0]
+                total = db.execute(f"SELECT COUNT(*) FROM accessible_sales_profile_leads spl JOIN companies c ON c.cnpj=spl.cnpj WHERE {condition}", values).fetchone()[0]
                 rows = db.execute(f"""SELECT c.*, spl.profile_id, spl.added_at AS carteira_adicionado_em,
                     spl.updated_at AS profile_updated_at, spl.favorito AS profile_favorito,
                     spl.lead_status AS profile_lead_status, spl.observacoes AS profile_observacoes,
@@ -1044,7 +1104,7 @@ class Handler(BaseHTTPRequestHandler):
                     spl.whatsapp_checked_at AS profile_whatsapp_checked_at,
                     spl.campaign AS profile_campaign,spl.persona AS profile_persona,
                     spl.lead_origin AS profile_lead_origin,spl.loss_reason AS profile_loss_reason
-                    FROM sales_profile_leads spl JOIN companies c ON c.cnpj=spl.cnpj
+                    FROM accessible_sales_profile_leads spl JOIN companies c ON c.cnpj=spl.cnpj
                     WHERE {condition}
                     ORDER BY {order_by}
                     LIMIT ? OFFSET ?""", values + [size, (page - 1) * size]).fetchall()
@@ -1077,7 +1137,7 @@ class Handler(BaseHTTPRequestHandler):
                     spl.whatsapp_checked_at,
                     spl.updated_at
                     FROM sales_profiles p
-                    LEFT JOIN sales_profile_leads spl ON spl.profile_id=p.id AND spl.cnpj=?
+                    LEFT JOIN accessible_sales_profile_leads spl ON spl.profile_id=p.id AND spl.cnpj=?
                     WHERE {scope} ORDER BY p.name COLLATE NOCASE""", [cnpj] + scope_values).fetchall()
             return self.send_json({"items": [dict(row) for row in rows]})
         if parsed.path == "/api/team-activity":
@@ -1088,7 +1148,7 @@ class Handler(BaseHTTPRequestHandler):
                 page = max(1, int(params.get('page', ['1'])[0]))
             except ValueError:
                 return self.send_json({"erro": "Período ou página inválidos"}, 400)
-            clauses = ['h.profile_id=?']; values = [profile_id]
+            clauses = ['h.profile_id=?', 'EXISTS (SELECT 1 FROM accessible_sales_profile_leads permitted WHERE permitted.profile_id=h.profile_id AND permitted.cnpj=h.cnpj)']; values = [profile_id]
             if start:
                 clauses.append('date(h.created_at)>=?'); values.append(start)
             if end:
@@ -1109,7 +1169,7 @@ class Handler(BaseHTTPRequestHandler):
             if not profile_id or len(cnpj) != 14:
                 return self.send_json({"erro": "Perfil ou CNPJ inválido"}, 400)
             with connect() as db:
-                if not self.owned_sales_profile(db, profile_id) or not db.execute("SELECT 1 FROM sales_profile_leads WHERE profile_id=? AND cnpj=?", (profile_id, cnpj)).fetchone():
+                if not self.owned_sales_profile(db, profile_id) or not db.execute("SELECT 1 FROM accessible_sales_profile_leads WHERE profile_id=? AND cnpj=?", (profile_id, cnpj)).fetchone():
                     return self.send_json({"erro": "Lead não encontrado no painel deste responsável"}, 404)
                 rows = db.execute("""SELECT id,event_type,title,details,created_at,changes_json
                     FROM sales_lead_history WHERE profile_id=? AND cnpj=?
@@ -1150,7 +1210,7 @@ class Handler(BaseHTTPRequestHandler):
                     spl.whatsapp_phone AS profile_whatsapp_phone, spl.whatsapp_checked_at AS profile_whatsapp_checked_at,
                     spl.campaign AS profile_campaign, spl.persona AS profile_persona,
                     spl.lead_origin AS profile_lead_origin, spl.loss_reason AS profile_loss_reason
-                    FROM sales_profile_leads spl JOIN companies c ON c.cnpj=spl.cnpj
+                    FROM accessible_sales_profile_leads spl JOIN companies c ON c.cnpj=spl.cnpj
                     WHERE {condition} ORDER BY spl.favorito DESC, spl.updated_at DESC, c.data_abertura DESC""", values).fetchall()
             output = io.StringIO(newline="")
             delimiter = "," if str(params.get("delimiter", ["semicolon"])[0]).lower() == "comma" else ";"
@@ -1220,9 +1280,9 @@ class Handler(BaseHTTPRequestHandler):
                 mei_timeline=[dict(r) for r in db.execute(f"""SELECT substr(data_abertura,1,7) label,COUNT(*) value
                     FROM {ACCOUNT_COMPANY_SOURCE} WHERE {mei_where} AND mei=1 AND data_abertura<>''
                     GROUP BY substr(data_abertura,1,7) ORDER BY label""",mei_state_vals)]
-                summary["base_ultima_data"] = db.execute("SELECT MAX(data_abertura) FROM companies WHERE uf='RS'").fetchone()[0]
-                options={k:[r[0] for r in db.execute(f"SELECT DISTINCT {k} FROM companies WHERE {k}<>'' ORDER BY {k}")] for k in ("municipio","regiao","segmento","porte","data_source")}
-                options["cnaes"] = [dict(r) for r in db.execute("SELECT cnae codigo,MAX(cnae_descricao) descricao,MAX(segmento) segmento,COUNT(*) empresas FROM companies WHERE cnae<>'' GROUP BY cnae ORDER BY empresas DESC,cnae")]
+                summary["base_ultima_data"] = db.execute("SELECT MAX(data_abertura) FROM companies WHERE uf='RS' AND COALESCE(situacao,'')<>'TESTE' AND NOT EXISTS (SELECT 1 FROM private_companies pc WHERE pc.cnpj=companies.cnpj)").fetchone()[0]
+                options={k:[r[0] for r in db.execute(f"SELECT DISTINCT {k} FROM companies WHERE uf='RS' AND COALESCE(situacao,'')<>'TESTE' AND NOT EXISTS (SELECT 1 FROM private_companies pc WHERE pc.cnpj=companies.cnpj) AND {k}<>'' ORDER BY {k}")] for k in ("municipio","regiao","segmento","porte","data_source")}
+                options["cnaes"] = [dict(r) for r in db.execute("SELECT cnae codigo,MAX(cnae_descricao) descricao,MAX(segmento) segmento,COUNT(*) empresas FROM companies WHERE uf='RS' AND COALESCE(situacao,'')<>'TESTE' AND NOT EXISTS (SELECT 1 FROM private_companies pc WHERE pc.cnpj=companies.cnpj) AND cnae<>'' GROUP BY cnae ORDER BY empresas DESC,cnae")]
                 opportunity_where, opportunity_vals = filters(p, {"score_min", "lead_status", "favorito"}, owner_id=self.session_owner_id())
                 high_clause = f"{opportunity_where} AND {LEAD_SCORE_SQL}>=80"
                 opportunity_state_vals = [owner_id] + opportunity_vals
@@ -1246,6 +1306,9 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length",str(len(data))); self.security_headers(); self.end_headers(); self.wfile.write(data)
 
     def do_POST(self):
+        return self.dispatch_write(self.handle_post)
+
+    def handle_post(self):
         if not self.guard_write(): return
         if self.path == "/login":
             length=min(int(self.headers.get("Content-Length","0")),4096)
@@ -1334,7 +1397,7 @@ class Handler(BaseHTTPRequestHandler):
             return sales_ops.handle(self,globals(),urlparse(self.path),write=True)
         if self.path=='/api/help/feedback':
             try:
-                payload=json.loads(self.rfile.read(min(int(self.headers.get('Content-Length','0')),2048)))
+                payload=self.read_json_object(2048)
                 if not isinstance(payload,dict) or type(payload.get('useful')) is not bool or not isinstance(payload.get('id'),str):raise ValueError('Resposta inválida')
                 with connect() as db:
                     item=db.execute('SELECT admin_only FROM help_articles WHERE id=? AND published=1',(payload.get('id'),)).fetchone()
@@ -1345,7 +1408,7 @@ class Handler(BaseHTTPRequestHandler):
             except (ValueError,TypeError):return self.send_json({'erro':'Resposta inválida'},400)
         if self.path=='/api/prospects/qualify':
             try:
-                payload=json.loads(self.rfile.read(min(int(self.headers.get('Content-Length','0')),4096)))
+                payload=self.read_json_object(4096)
                 with connect() as db:result=prospecting.qualify(db,self.session_owner_id(),payload)
                 return self.send_json(result,201 if result['created'] else 200)
             except FileExistsError as error:return self.send_json({'erro':str(error),'duplicate':True},409)
@@ -1353,14 +1416,14 @@ class Handler(BaseHTTPRequestHandler):
             except LookupError as error:return self.send_json({'erro':str(error)},404)
             except (ValueError,TypeError) as error:return self.send_json({'erro':str(error)},400)
         if self.path == "/api/sync":
-            if security.production() and not self.session_is_admin(): return self.send_json({'erro':'Operação restrita ao administrador'},403)
+            if not self.session_is_admin(): return self.send_json({'erro':'Operação restrita ao administrador'},403)
             started = SYNC.start()
             return self.send_json({"iniciado":started,**SYNC.snapshot()},202 if started else 200)
         if self.path in ('/api/discovery/recommendations/review','/api/discovery/notifications'):
             try:
                 length=int(self.headers.get('Content-Length','0'))
                 if not 0<length<=16384: return self.send_json({'erro':'Seleção excede o limite'},413)
-                payload=json.loads(self.rfile.read(length))
+                payload=self.read_json_object(length)
                 with connect() as db:
                     handler=discovery.review_recommendations if self.path.endswith('/review') else discovery.update_notifications
                     result=handler(db,self.session_owner_id(),payload)
@@ -1376,7 +1439,7 @@ class Handler(BaseHTTPRequestHandler):
                     return self.send_json({'id':run_id,'status':'executando'},202)
                 length=int(self.headers.get('Content-Length','0'))
                 if not 0<length<=8192: return self.send_json({'erro':'Campanha excede o limite'},413)
-                payload=json.loads(self.rfile.read(length))
+                payload=self.read_json_object(length)
                 with connect() as db: identifier=discovery.save_campaign(db,owner,payload)
                 return self.send_json({'id':identifier},201)
             except discovery.CampaignConflict as error: return self.send_json({'erro':str(error)},409)
@@ -1386,7 +1449,7 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 length=int(self.headers.get('Content-Length','0'))
                 if not 0<length<=2*1024*1024: return self.send_json({'erro':'Arquivo excede 2 MB'},413)
-                payload=json.loads(self.rfile.read(length))
+                payload=self.read_json_object(length)
                 with connect() as db:
                     result=prospecting.import_rows(db,self.session_owner_id(),payload.get('rows'))
             except (ValueError,TypeError,AttributeError,UnicodeDecodeError) as error:
@@ -1394,7 +1457,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(result,201)
         if self.path == '/api/commercial-settings':
             try:
-                payload=json.loads(self.rfile.read(min(int(self.headers.get('Content-Length','0')),4096)))
+                payload=self.read_json_object(4096)
                 profile_id=str(payload.get('profile_id',''))
                 hours=int(payload.get('contact_sla_hours',48));days=int(payload.get('stalled_days',7))
                 if not 1<=hours<=720 or not 1<=days<=365: raise ValueError()
@@ -1404,7 +1467,7 @@ class Handler(BaseHTTPRequestHandler):
                 db.execute('INSERT INTO commercial_settings(profile_id,contact_sla_hours,stalled_days) VALUES(?,?,?) ON CONFLICT(profile_id) DO UPDATE SET contact_sla_hours=excluded.contact_sla_hours,stalled_days=excluded.stalled_days',(profile_id,hours,days))
             return self.send_json({'saved':True})
         if self.path == "/api/monitor":
-            if security.production() and not self.session_is_admin(): return self.send_json({'erro':'Operação restrita ao administrador'},403)
+            if not self.session_is_admin(): return self.send_json({'erro':'Operação restrita ao administrador'},403)
             started = MONITOR.start()
             snapshot = MONITOR.snapshot()
             status = 202 if started else (409 if not snapshot["configurado"] else 200)
@@ -1412,7 +1475,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/api/message-templates":
             length = min(int(self.headers.get("Content-Length", "0")), 16 * 1024)
             try:
-                payload = json.loads(self.rfile.read(length) or b"{}")
+                payload = self.read_json_object(length)
             except json.JSONDecodeError:
                 return self.send_json({"erro": "JSON inválido"}, 400)
             name = str(payload.get("name", "")).strip()[:60]
@@ -1444,7 +1507,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/api/team-profiles":
             length = min(int(self.headers.get("Content-Length", "0")), 16 * 1024)
             try:
-                payload = json.loads(self.rfile.read(length) or b"{}")
+                payload = self.read_json_object(length)
             except json.JSONDecodeError:
                 return self.send_json({"erro": "JSON inválido"}, 400)
             name = str(payload.get("name", "")).strip()[:80]
@@ -1464,7 +1527,7 @@ class Handler(BaseHTTPRequestHandler):
             if not admin_panel.get('test_leads',DB):return self.send_json({'erro':'Leads de teste desativados pelo administrador'},403)
             length = min(int(self.headers.get("Content-Length", "0")), 16 * 1024)
             try:
-                payload = json.loads(self.rfile.read(length) or b"{}")
+                payload = self.read_json_object(length)
             except json.JSONDecodeError:
                 return self.send_json({"erro": "JSON inválido"}, 400)
             profile_id = str(payload.get("profile_id", "")).strip()
@@ -1477,10 +1540,12 @@ class Handler(BaseHTTPRequestHandler):
             now = datetime.now().isoformat(timespec="seconds")
             cnpj = "999" + f"{uuid.uuid4().int % 10**11:011d}"
             with connect() as db:
-                if not self.owned_sales_profile(db, profile_id):
+                profile = self.owned_sales_profile(db, profile_id)
+                if not profile:
                     return self.send_json({"erro": "Área comercial não encontrada para esta conta"}, 404)
                 db.execute("""INSERT INTO companies(cnpj,razao_social,nome_fantasia,situacao,data_abertura,cnae,cnae_descricao,segmento,municipio,regiao,uf,telefone,porte,mei,data_source)
                     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", (cnpj, name, name, "TESTE", date.today().isoformat(), "0000000", "Lead fictício para teste", "Teste interno", "Teste local", "Demonstração", "ZZ", phone, "TESTE", 0, "Lead de teste local"))
+                db.execute('INSERT INTO private_companies(cnpj,owner_id) VALUES(?,?)', (cnpj, profile['owner_id'] or self.session_owner_id()))
                 db.execute("INSERT INTO sales_profile_leads(profile_id,cnpj,added_at,updated_at,favorito) VALUES(?,?,?,?,1)", (profile_id, cnpj, now, now))
                 add_lead_history(db, profile_id, cnpj, "created", "Lead de teste incluído no painel", "Registro fictício local para validar o fluxo comercial.", now)
                 db.execute("UPDATE sales_profiles SET updated_at=? WHERE id=?", (now, profile_id))
@@ -1489,7 +1554,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/api/team-leads":
             length = min(int(self.headers.get("Content-Length", "0")), 32 * 1024)
             try:
-                payload = json.loads(self.rfile.read(length) or b"{}")
+                payload = self.read_json_object(length)
             except json.JSONDecodeError:
                 return self.send_json({"erro": "JSON inválido"}, 400)
             profile_id = str(payload.get("profile_id", "")).strip()
@@ -1499,11 +1564,12 @@ class Handler(BaseHTTPRequestHandler):
             with connect() as db:
                 if not self.owned_sales_profile(db, profile_id):
                     return self.send_json({"erro": "Área comercial não encontrada para esta conta"}, 404)
-                if not db.execute("SELECT 1 FROM companies WHERE cnpj=?", (cnpj,)).fetchone():
+                target_profile = self.owned_sales_profile(db, profile_id)
+                if not company_access.available(db, cnpj, target_profile['owner_id'] or self.session_owner_id()):
                     return self.send_json({"erro": "Empresa não encontrada"}, 404)
                 db.execute('BEGIN IMMEDIATE')
-                other = db.execute("SELECT 1 FROM sales_profile_leads WHERE cnpj=? AND profile_id<>? AND lead_status NOT IN ('convertido','descartado','concluido') LIMIT 1",(cnpj,profile_id)).fetchone()
-                already = db.execute('SELECT 1 FROM sales_profile_leads WHERE profile_id=? AND cnpj=?',(profile_id,cnpj)).fetchone()
+                other = db.execute("SELECT 1 FROM accessible_sales_profile_leads WHERE cnpj=? AND profile_id<>? AND lead_status NOT IN ('convertido','descartado','concluido') LIMIT 1",(cnpj,profile_id)).fetchone()
+                already = db.execute('SELECT 1 FROM accessible_sales_profile_leads WHERE profile_id=? AND cnpj=?',(profile_id,cnpj)).fetchone()
                 if other and not already and payload.get('allow_duplicate') is not True:
                     return self.send_json({'erro':'Esta empresa já está em outro atendimento ativo. Confirme antes de duplicar a abordagem.','duplicate':True},409)
                 now = datetime.now().isoformat(timespec="seconds")
@@ -1514,12 +1580,12 @@ class Handler(BaseHTTPRequestHandler):
                     db.execute("UPDATE sales_profile_leads SET updated_at=? WHERE profile_id=? AND cnpj=?", (now, profile_id, cnpj))
                 db.execute("UPDATE sales_profiles SET updated_at=? WHERE id=?", (now, profile_id))
                 db.commit()
-                count = db.execute("SELECT COUNT(*) FROM sales_profile_leads WHERE profile_id=?", (profile_id,)).fetchone()[0]
+                count = db.execute("SELECT COUNT(*) FROM accessible_sales_profile_leads WHERE profile_id=?", (profile_id,)).fetchone()[0]
             return self.send_json({"adicionado": bool(cursor.rowcount), "profile_id": profile_id, "cnpj": cnpj, "lead_count": count}, 201 if cursor.rowcount else 200)
         if self.path == "/api/team-lead-events":
             length = min(int(self.headers.get("Content-Length", "0")), 16 * 1024)
             try:
-                payload = json.loads(self.rfile.read(length) or b"{}")
+                payload = self.read_json_object(length)
             except json.JSONDecodeError:
                 return self.send_json({"erro": "JSON inválido"}, 400)
             profile_id = str(payload.get("profile_id", "")).strip()
@@ -1529,7 +1595,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json({"erro": "Evento inválido"}, 400)
             details = str(payload.get("details", "")).strip()[:1000]
             with connect() as db:
-                if not self.owned_sales_profile(db, profile_id) or not db.execute("SELECT 1 FROM sales_profile_leads WHERE profile_id=? AND cnpj=?", (profile_id, cnpj)).fetchone():
+                if not self.owned_sales_profile(db, profile_id) or not db.execute("SELECT 1 FROM accessible_sales_profile_leads WHERE profile_id=? AND cnpj=?", (profile_id, cnpj)).fetchone():
                     return self.send_json({"erro": "Lead não encontrado no painel deste responsável"}, 404)
                 now = datetime.now().isoformat(timespec="seconds")
                 selected_profile=self.owned_sales_profile(db,profile_id)
@@ -1542,7 +1608,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/api/profiles":
             length = min(int(self.headers.get("Content-Length", "0")), 64 * 1024)
             try:
-                payload = json.loads(self.rfile.read(length) or b"{}")
+                payload = self.read_json_object(length)
             except json.JSONDecodeError:
                 return self.send_json({"erro": "JSON inválido"}, 400)
             name = str(payload.get("name", "")).strip()[:60]
@@ -1563,7 +1629,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/api/profile-leads":
             length = min(int(self.headers.get("Content-Length", "0")), 16 * 1024)
             try:
-                payload = json.loads(self.rfile.read(length) or b"{}")
+                payload = self.read_json_object(length)
             except json.JSONDecodeError:
                 return self.send_json({"erro": "JSON inválido"}, 400)
             profile_id = str(payload.get("profile_id", "")).strip()
@@ -1577,8 +1643,7 @@ class Handler(BaseHTTPRequestHandler):
                     return self.send_json({"erro": "Perfil não encontrado"}, 404)
                 if profile["is_system"]:
                     return self.send_json({"erro": "Escolha um perfil personalizado para montar uma lista"}, 400)
-                company = db.execute("SELECT cnpj FROM companies WHERE cnpj=?", (cnpj,)).fetchone()
-                if not company:
+                if not company_access.available(db, cnpj, self.session_owner_id()):
                     return self.send_json({"erro": "Empresa não encontrada"}, 404)
                 now = datetime.now().isoformat(timespec="seconds")
                 cursor = db.execute("INSERT OR IGNORE INTO profile_leads(profile_id,cnpj,added_at) VALUES(?,?,?)", (profile_id, cnpj, now))
@@ -1589,6 +1654,9 @@ class Handler(BaseHTTPRequestHandler):
         return self.send_error(404)
 
     def do_PUT(self):
+        return self.dispatch_write(self.handle_put)
+
+    def handle_put(self):
         if not self.guard_write(): return
         if not self.require_auth(): return
         match=re.fullmatch(r'/api/discovery/campaigns/([a-f0-9]{32})',self.path)
@@ -1596,7 +1664,7 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 length=int(self.headers.get('Content-Length','0'))
                 if not 0<length<=8192: return self.send_json({'erro':'Campanha excede o limite'},413)
-                payload=json.loads(self.rfile.read(length))
+                payload=self.read_json_object(length)
                 with connect() as db: identifier=discovery.save_campaign(db,self.session_owner_id(),payload,match.group(1))
                 return self.send_json({'id':identifier})
             except discovery.CampaignConflict as error: return self.send_json({'erro':str(error)},409)
@@ -1608,7 +1676,7 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 length=int(self.headers.get('Content-Length','0'))
                 if not 0<length<=16384: return self.send_json({'erro':'Contato excede o limite'},413)
-                payload=json.loads(self.rfile.read(length))
+                payload=self.read_json_object(length)
                 if not isinstance(payload,dict): raise ValueError('Contato inválido')
                 with connect() as db:
                     db.execute('BEGIN IMMEDIATE')
@@ -1629,7 +1697,7 @@ class Handler(BaseHTTPRequestHandler):
             template_id = parsed.path.rsplit("/", 1)[-1]
             length = min(int(self.headers.get("Content-Length", "0")), 16 * 1024)
             try:
-                payload = json.loads(self.rfile.read(length) or b"{}")
+                payload = self.read_json_object(length)
             except json.JSONDecodeError:
                 return self.send_json({"erro": "JSON inválido"}, 400)
             owner_id = self.session_owner_id()
@@ -1666,7 +1734,7 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/api/team-leads":
             length = min(int(self.headers.get("Content-Length", "0")), 64 * 1024)
             try:
-                payload = json.loads(self.rfile.read(length) or b"{}")
+                payload = self.read_json_object(length)
             except json.JSONDecodeError:
                 return self.send_json({"erro": "JSON inválido"}, 400)
             profile_id = str(payload.get("profile_id", "")).strip()
@@ -1728,7 +1796,7 @@ class Handler(BaseHTTPRequestHandler):
                 db.execute('BEGIN IMMEDIATE')
                 if not self.owned_sales_profile(db, profile_id):
                     return self.send_json({"erro": "Área comercial não encontrada para esta conta"}, 404)
-                current = db.execute("SELECT * FROM sales_profile_leads WHERE profile_id=? AND cnpj=?", (profile_id, cnpj)).fetchone()
+                current = db.execute("SELECT * FROM accessible_sales_profile_leads WHERE profile_id=? AND cnpj=?", (profile_id, cnpj)).fetchone()
                 if not current:
                     return self.send_json({"erro": "Inclua o lead no painel antes de editar"}, 404)
                 if 'expected_updated_at' in payload and payload['expected_updated_at'] != current['updated_at']:
@@ -1779,7 +1847,7 @@ class Handler(BaseHTTPRequestHandler):
                     COALESCE(NULLIF(spl.whatsapp_status,''),'pending') AS profile_whatsapp_status,
                     spl.whatsapp_phone AS profile_whatsapp_phone,
                     spl.whatsapp_checked_at AS profile_whatsapp_checked_at
-                    FROM sales_profile_leads spl JOIN companies c ON c.cnpj=spl.cnpj
+                    FROM accessible_sales_profile_leads spl JOIN companies c ON c.cnpj=spl.cnpj
                     WHERE spl.profile_id=? AND spl.cnpj=?""", (profile_id, cnpj)).fetchone()
             result = dict(row); result["lead_score"] = score_company(result)
             return self.send_json(result)
@@ -1787,7 +1855,7 @@ class Handler(BaseHTTPRequestHandler):
         cnpj = ''.join(c for c in parsed.path.rsplit('/',1)[-1].upper() if c.isalnum())
         if len(cnpj) != 14: return self.send_json({"erro":"CNPJ inválido"},400)
         length = min(int(self.headers.get("Content-Length","0")), 64 * 1024)
-        try: payload = json.loads(self.rfile.read(length) or b"{}")
+        try: payload = self.read_json_object(length)
         except json.JSONDecodeError: return self.send_json({"erro":"JSON inválido"},400)
         allowed = {}
         if "lead_status" in payload:
@@ -1799,7 +1867,7 @@ class Handler(BaseHTTPRequestHandler):
         if not allowed: return self.send_json({"erro":"Nenhuma alteração válida"},400)
         owner_id = self.session_owner_id()
         with connect() as db:
-            if not db.execute("SELECT 1 FROM companies WHERE cnpj=?", (cnpj,)).fetchone():
+            if not company_access.available(db, cnpj, owner_id):
                 return self.send_json({"erro":"Empresa não encontrada"},404)
             current = db.execute("""SELECT lead_status,favorito,observacoes FROM account_company_state
                 WHERE account_id=? AND cnpj=?""", (owner_id, cnpj)).fetchone()

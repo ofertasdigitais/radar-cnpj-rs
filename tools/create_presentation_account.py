@@ -14,8 +14,11 @@ import os
 from pathlib import Path
 import sqlite3
 import uuid
+import sys
 
 ROOT=Path(__file__).resolve().parents[1]
+sys.path.insert(0,str(ROOT))
+import company_access
 BUSINESSES=[
  ('Aurora Café','Alimentação e hospedagem','5611203','Lanchonetes, casas de chá e similares','Porto Alegre'),
  ('Vértice Tecnologia','Tecnologia e comunicação','6201501','Desenvolvimento de programas sob encomenda','Caxias do Sul'),
@@ -119,6 +122,7 @@ def provision(database,password,backup_directory,now=None):
             insert(db,'message_templates',dict(id='demo-mensagem-'+uuid.uuid4().hex[:12],owner_id=owner,name='Apresentação fictícia',body='SIMULAÇÃO: Olá! Sou {vendedor}, do Radar. Gostaria de apresentar uma proposta para {empresa}.',is_default=1,created_at=stamp(now),updated_at=stamp(now)))
             if before!=other_data_digest(db,owner):raise ValueError('Dados de outras contas divergiram; operação será revertida')
             if db.execute('PRAGMA foreign_key_check').fetchall():raise ValueError('Relação inconsistente; operação será revertida')
+            company_access.ensure_schema(db)
             db.commit()
         except Exception:db.rollback();raise
     return dict(username='Radar',account_id=owner,profile_id=profile,leads=24,history_events=history_count,stages=dict(Counter(STAGES)),closed_cents=sum(won_values),pipeline_cents=sum(pipeline),other_accounts_unchanged=True,backup=str(backup))

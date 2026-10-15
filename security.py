@@ -5,6 +5,8 @@ import hmac
 import secrets
 import threading
 import time
+import socket
+from http.server import ThreadingHTTPServer
 from collections import OrderedDict
 from urllib.parse import urlsplit, unquote
 
@@ -77,3 +79,59 @@ LOGIN_LIMITER = AttemptLimiter()
 # A generous connection budget bounds random-name spray without the eight-guess
 # tunnel-wide lockout. The strict budget is canonical-account scoped.
 LOGIN_EDGE_LIMITER = AttemptLimiter(maximum=1000, window=900, capacity=2000)
+
+
+def allowed_host(header, public_url_file=None):
+    """Only loopback and explicitly configured/published origin hostnames."""
+    try:
+        if not header or len(header)>300 or any(c.isspace() for c in header): return False
+        parsed = urlsplit('http://' + header)
+        if parsed.username or parsed.password or parsed.path or parsed.query or parsed.fragment: return False
+        parsed.port  # validate the port, including range
+        name = (parsed.hostname or '').lower().rstrip('.')
+        allowed = {'127.0.0.1', 'localhost', '::1'}
+        allowed.update(x.strip().lower().rstrip('.') for x in os.environ.get('RADAR_ALLOWED_HOSTS','').split(',') if x.strip())
+        configured = urlsplit(os.environ.get('RADAR_PUBLIC_URL',''))
+        if configured.scheme in ('http','https') and configured.hostname and not configured.username and not configured.password:
+            allowed.add(configured.hostname.lower().rstrip('.'))
+        if public_url_file and public_url_file.is_file():
+            public = urlsplit(public_url_file.read_text(encoding='utf-8-sig').splitlines()[0].strip())
+            if public.scheme in ('http','https') and public.hostname and not public.username and not public.password:
+                allowed.add(public.hostname.lower().rstrip('.'))
+        return name in allowed
+    except (ValueError, OSError, IndexError):
+        return False
+
+
+class BoundedHTTPServer(ThreadingHTTPServer):
+    """Bound concurrent slow clients; per-server budgets avoid shared-test state."""
+    daemon_threads = True
+    request_queue_size = 32
+
+    def __init__(self, *args, **kwargs):
+        self.slots = threading.BoundedSemaphore(32)
+        self.api_reads = AttemptLimiter(maximum=600, window=60)
+        self.api_writes = AttemptLimiter(maximum=300, window=60)
+        super().__init__(*args, **kwargs)
+
+    def process_request(self, request, address):
+        if not self.slots.acquire(blocking=False):
+            try:
+                request.settimeout(1)
+                request.sendall(b'HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\nRetry-After: 2\r\nContent-Length: 0\r\nX-Content-Type-Options: nosniff\r\n\r\n')
+            except (OSError, socket.timeout):
+                pass
+            finally:
+                self.shutdown_request(request)
+            return
+        try:
+            super().process_request(request, address)
+        except Exception:
+            self.slots.release()
+            raise
+
+    def process_request_thread(self, request, address):
+        try:
+            super().process_request_thread(request, address)
+        finally:
+            self.slots.release()

@@ -65,8 +65,10 @@ def dashboard(db,profile,owner,start='',end='',month='',now=None):
     month=month or now.strftime('%Y-%m')
     if not re.fullmatch(r'\d{4}-(0[1-9]|1[0-2])',month):raise ValueError('Mês da meta inválido')
     items=commercial.rows(db,profile)
-    events=[dict(r) for r in db.execute("SELECT cnpj,event_type,created_at FROM sales_lead_history WHERE profile_id=? AND event_type IN ('contact_recorded','contact_outcome') ORDER BY created_at",(profile,))]
+    events=[dict(r) for r in db.execute("SELECT h.cnpj,h.event_type,h.created_at FROM sales_lead_history h JOIN accessible_sales_profile_leads s ON s.profile_id=h.profile_id AND s.cnpj=h.cnpj WHERE h.profile_id=? AND h.event_type IN ('contact_recorded','contact_outcome') ORDER BY h.created_at",(profile,))]
     suppressed={r['cnpj']:r['reason'] for r in db.execute('SELECT cnpj,reason FROM contact_suppression WHERE owner_id=?',(owner,))}
+    visible_ids={item['cnpj'] for item in items}
+    suppressed={cnpj:reason for cnpj,reason in suppressed.items() if cnpj in visible_ids}
     agenda=[];counts={key:0 for key in ('overdue','today','week','later','unscheduled','blocked')}
     for x in items:
         if x['cnpj'] in suppressed:counts['blocked']+=1;continue
@@ -113,7 +115,7 @@ def quick_contact(db,profile,owner,payload,now=None):
     stamp=(now or datetime.now()).isoformat(timespec='microseconds')
     cnpj=str(payload.get('cnpj',''))
     db.execute('BEGIN IMMEDIATE')
-    row=db.execute('SELECT s.*,c.* FROM sales_profile_leads s JOIN companies c ON c.cnpj=s.cnpj WHERE s.profile_id=? AND s.cnpj=?',(profile,cnpj)).fetchone()
+    row=db.execute('SELECT s.*,c.* FROM accessible_sales_profile_leads s JOIN companies c ON c.cnpj=s.cnpj WHERE s.profile_id=? AND s.cnpj=?',(profile,cnpj)).fetchone()
     if not row:raise LookupError('Lead não encontrado')
     if blocked(db,owner,cnpj):raise PermissionError('Contato bloqueado nesta conta. Revise a autorização antes de reativar.')
     if payload.get('revision')!=revision(row):raise FileExistsError('Lead alterado em outra sessão. Atualize a agenda antes de salvar.')
@@ -150,7 +152,7 @@ def complete_action(db,profile,owner,payload):
         if not parsed or parsed<=datetime.now() or parsed.year>2100:raise ValueError('Escolha uma data futura para o novo retorno.')
         due=parsed.isoformat(timespec='seconds')
     db.execute('BEGIN IMMEDIATE')
-    row=db.execute('SELECT s.*,c.* FROM sales_profile_leads s JOIN companies c ON c.cnpj=s.cnpj WHERE s.profile_id=? AND s.cnpj=?',(profile,cnpj)).fetchone()
+    row=db.execute('SELECT s.*,c.* FROM accessible_sales_profile_leads s JOIN companies c ON c.cnpj=s.cnpj WHERE s.profile_id=? AND s.cnpj=?',(profile,cnpj)).fetchone()
     if not row:raise LookupError('Lead não encontrado')
     if payload.get('revision')!=revision(row):raise FileExistsError('Lead alterado em outra sessão. Atualize antes de concluir.')
     if row['lead_status'] in ('convertido','descartado','concluido'):raise ValueError('Lead já encerrado. Reabra pela ficha se necessário.')
@@ -170,7 +172,7 @@ def handle(h,context,parsed,write=False):
         if write:
             length=int(h.headers.get('Content-Length','0'))
             if not 0<length<=8192:raise ValueError('Solicitação acima do limite permitido')
-            payload=json.loads(h.rfile.read(length))
+            payload=h.read_json_object(length)
             if not isinstance(payload,dict):raise ValueError('Solicitação inválida')
             profile=str(payload.get('profile_id',''))
         else:
@@ -192,7 +194,7 @@ def handle(h,context,parsed,write=False):
             elif parsed.path=='/api/sales-ops/suppression':
                 cnpj=payload.get('cnpj');active=payload.get('blocked');reason=payload.get('reason','')
                 if type(active) is not bool or not isinstance(reason,str) or len(reason)>500:raise ValueError('Informe motivo de até 500 caracteres')
-                if not db.execute('SELECT 1 FROM sales_profile_leads WHERE profile_id=? AND cnpj=?',(profile,cnpj)).fetchone():raise LookupError('Lead não encontrado')
+                if not db.execute('SELECT 1 FROM accessible_sales_profile_leads WHERE profile_id=? AND cnpj=?',(profile,cnpj)).fetchone():raise LookupError('Lead não encontrado')
                 if active and not reason.strip():raise ValueError('Informe o motivo do bloqueio')
                 stamp=datetime.now().isoformat(timespec='microseconds')
                 if active:db.execute('INSERT INTO contact_suppression VALUES(?,?,?,?) ON CONFLICT(owner_id,cnpj) DO UPDATE SET reason=excluded.reason,updated_at=excluded.updated_at',(owner,cnpj,reason.strip(),stamp))

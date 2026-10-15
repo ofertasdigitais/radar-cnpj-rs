@@ -4,6 +4,7 @@ import re
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 import admin_panel
+import company_access
 
 LOSS_REASONS = {'': 'Não informado', 'preco': 'Preço', 'sem_interesse': 'Sem interesse',
                 'sem_orcamento': 'Sem orçamento', 'concorrente': 'Concorrente',
@@ -38,8 +39,9 @@ def settings(db, profile_id):
 
 
 def rows(db, profile_id):
-    return [dict(row) for row in db.execute('''SELECT s.*,c.* FROM sales_profile_leads s
-        JOIN companies c ON c.cnpj=s.cnpj WHERE s.profile_id=? ORDER BY s.updated_at DESC''', (profile_id,))]
+    return [dict(row) for row in db.execute(f'''SELECT s.*,c.* FROM accessible_sales_profile_leads s
+        JOIN companies c ON c.cnpj=s.cnpj WHERE s.profile_id=? AND
+        {company_access.profile_visible('s.cnpj', 's.profile_id')} ORDER BY s.updated_at DESC''', (profile_id,))]
 
 
 def timestamp(value):
@@ -148,7 +150,7 @@ def log_changes(db, profile_id, cnpj, current, changes, now):
 
 
 def archive_lead(db, profile_id, cnpj):
-    row = db.execute('SELECT nome_fantasia,razao_social FROM companies WHERE cnpj=?', (cnpj,)).fetchone()
+    row = db.execute(f'SELECT nome_fantasia,razao_social FROM companies c WHERE cnpj=? AND {company_access.profile_visible("c.cnpj", "?")}', (cnpj,profile_id)).fetchone()
     events = [dict(x) for x in db.execute('SELECT * FROM sales_lead_history WHERE profile_id=? AND cnpj=? ORDER BY id', (profile_id,cnpj))]
     if row:
         db.execute('INSERT INTO commercial_archive(profile_id,cnpj,company_name,removed_at,events_json) VALUES(?,?,?,?,?)',

@@ -106,7 +106,7 @@ def handle_post(h,context,path):
         length=int(h.headers.get('Content-Length','0'))
         limit=65536 if path=='/api/admin/help' else 16384
         if not 0<length<=limit:raise ValueError('Solicitação administrativa acima do limite permitido')
-        payload=json.loads(h.rfile.read(length))
+        payload=h.read_json_object(length)
         if not isinstance(payload,dict):raise ValueError('Solicitação inválida')
         connect=context['connect'];db_path=context['DB'];actor=h.session_username()
         if path=='/api/admin/config':
