@@ -5,7 +5,7 @@
   "scripts": {
     "build:tools": "node tools/build-tools.cjs",
     "build:react": "node tools/build-react.cjs",
-    "test:tools": "node --test tests/tools.test.cjs tests/reports.test.cjs tests/bi-metrics.test.cjs",
+    "test:tools": "node --test tests/tools.test.cjs tests/reports.test.cjs tests/bi-metrics.test.cjs tests/resize-observer.test.cjs",
     "test:browser": "playwright test -c playwright.config.cjs"
   },
   "dependencies": {

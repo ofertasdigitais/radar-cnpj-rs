@@ -8,6 +8,7 @@ from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import app
 import commercial
+import security
 from reports import commercial_pdf
 
 
@@ -35,6 +36,11 @@ if __name__=='__main__':
         app.DB=Path(directory)/'demo.sqlite';seed()
         app.SYNC.db_path=app.DB;app.MONITOR.db_path=app.DB
         server=app.ThreadingHTTPServer(('127.0.0.1',18000),app.Handler)
+        # Hundreds of automated page loads share one anonymous loopback
+        # identity. Production budgets stay unchanged and are tested in the
+        # isolated security HTTP suite, not disabled in the application.
+        server.api_reads=security.AttemptLimiter(maximum=10000,window=60)
+        server.api_writes=security.AttemptLimiter(maximum=3000,window=60)
         print('QA isolado: http://127.0.0.1:18000/#leads',flush=True)
         try:server.serve_forever()
         finally:server.server_close()

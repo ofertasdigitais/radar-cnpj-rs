@@ -24,7 +24,7 @@
   const renderTable=renderRows;
   renderRows=function(){renderTable();renderCards();};
   select.onchange=()=>{columns=Number(select.value);try{localStorage.setItem('radar-company-columns',String(columns));}catch(_){}fit();};
-  new ResizeObserver(fit).observe(table);
+  window.RadarLibraries.observeResize(table,fit,{widthOnly:true});
   window.addEventListener('radar:runtime',fit);
   renderCards();
 })();

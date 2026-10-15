@@ -16,7 +16,7 @@
     "lucide": "1.52.0"
   },
   "assets": {
-    "radar-libraries.js": "6c30c09befb5d4a37a092cf88a44dc32f52dd3205e4afdd26f350ffac63b3645",
+    "radar-libraries.js": "9cdbc09c9b09d55747ae41d2d143152912964ccf1da1ec2643aca4ad3d23a98b",
     "radar-charts.js": "40c71d5eeb9b2705d79c1b441b869516185a880b9cb3bff661487ce8cc73ee39",
     "radar-pdf.js": "4c9be97a6023be8e1486ce00f6ceec42b20d64f8f83bced9d755da3c1fc22f4f"
   }

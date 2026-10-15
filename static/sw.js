@@ -1,4 +1,4 @@
-const CACHE='radar-shell-v80';
+const CACHE='radar-shell-v82';
 const ASSETS=['/style.css','/visual.css','/lead-layout.css','/company-layout.css','/company-layout.js','/segmentation.css','/commercial-taxonomy.js','/segmentation.js','/campaign-presets.js','/commercial-tools.js','/commercial-tools.css','/bi-integrated.css','/app.js','/team.js','/bi-lab.js','/auth.js','/manifest.webmanifest','/icon.svg','/fonts/Inter-Latin.woff2','/vendor/radar-libraries.js','/vendor/radar-charts.js','/vendor/radar-pdf.js','/tools-core.js','/radar-tools.js','/radar-tools.css','/radar-report.js','/report-studio.js','/radar-charts.js'];
 ASSETS.push('/react-login.js','/react-login.css','/react-discovery.js','/react-discovery.css','/react-overview.js','/react-overview.css');
 ASSETS.push('/runtime.js','/runtime.css');

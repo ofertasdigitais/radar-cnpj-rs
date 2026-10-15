@@ -22,6 +22,8 @@ html[data-theme=light] {
   --rp-control-depth: 0 2px 3px #3815270b, inset 0 1px 0 #fff;
 }
 body, button, input, select, textarea { font-family: Inter, sans-serif; }
+button { appearance:none; -webkit-appearance:none; }
+button.secondary { min-height:44px; padding:10px 14px; border:1px solid var(--rp-border); border-radius:8px; background:var(--rp-raised); color:var(--rp-text); font-weight:700; line-height:1.4; cursor:pointer; }
 body { text-rendering: optimizeLegibility; }
 button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 :is(button,a,input,select,textarea,summary):focus-visible {
@@ -146,4 +148,42 @@ body[data-view] .topbar,.ad-topbar { box-shadow: 0 2px 12px #0000000c; }
 }
 @media print {
   :is(.ov-panel,.bi-panel,.ad-card,.portfolio-lead,.company-preview-card,.ov-metric) { box-shadow:none; }
+}
+
+/* Structural controls must not inherit ripple clipping or theme fallbacks. */
+html[data-theme="light"] { --faint:#675b64; }
+html[data-theme="light"] :is(.crm-kpis .positive strong,#bi .kpi.positive strong,#bi .safe) { color:#087b49; }
+html[data-theme="light"] #bi .risk { color:#b8103d; }
+html:not([data-theme="light"]) { --accent-strong:#ff7394; }
+html:not([data-theme="light"]) :is(.city-name i,.company-avatar,.mini-icon) { color:#ff91ae; }
+html[data-theme="light"] .portfolio-next-action.overdue b { color:#b8103d; }
+html[data-theme="light"] .profile-card-top strong { color:#b8103d; }
+.stage-card.empty-stage { opacity:1; border-style:dashed; }
+:is(.detail-drawer,.import-modal,.profile-modal,.team-profile-modal,.message-template-modal,.test-lead-modal,.csv-export-modal):not(.open) { visibility:hidden; }
+@media(max-width:900px) { .sidebar:not(.open) { visibility:hidden; } }
+body[data-view] .topbar { overflow:visible; }
+.radar-header-more { display:none; position:relative; flex:none; }
+.radar-header-more summary { list-style:none; cursor:pointer; display:grid; place-items:center; width:44px; height:44px; border:1px solid var(--ov-line); border-radius:8px; background:var(--ov-soft); color:var(--ov-text); font-size:22px; }
+.radar-header-more summary::-webkit-details-marker { display:none; }
+.radar-header-more>div { position:absolute; top:calc(100% + 10px); right:0; min-width:200px; padding:8px; display:grid; gap:8px; border:1px solid var(--ov-line); border-radius:10px; background:var(--ov-panel); box-shadow:var(--rp-depth); }
+.radar-header-more>div :is(button,a) { display:block; width:100%; min-height:44px; padding:10px 12px; text-align:left; border:0; border-radius:6px; color:var(--ov-text); background:var(--ov-soft); text-decoration:none; font-size:15px; }
+body[data-view] .radar-quick-nav kbd { margin-left:2px; flex:none; }
+#bi .bi-panel-head { flex-wrap:wrap; }
+#bi .bi-panel-head>* { min-width:0; max-width:100%; }
+#bi .segmented { flex-wrap:wrap; }
+@media(max-width:600px) {
+  body[data-view] .top-actions { gap:8px; }
+  body[data-view] .topbar :is(.radar-help-shortcut,#refresh,.avatar) { display:none; }
+  .radar-header-more { display:block; }
+  body[data-view] .topbar .discovery-bell { overflow:visible; position:relative; justify-content:center; }
+  .topbar .discovery-bell b { position:absolute; top:-4px; right:-4px; min-width:18px; padding:2px 4px; font-size:10px; }
+  .content :is(input,select,textarea), .team-editor-grid :is(input,select,textarea), .discovery-dialog :is(input,select,textarea), .ad-content :is(input,select,textarea) { font-size:16px!important; }
+  #bi :is(.segmented button,.bi-controls button,.bi-controls select), .companies-section .open-detail { min-height:44px; }
+  .sidebar .primary-navigation { mask-image:none; -webkit-mask-image:none; }
+}
+@media(max-height:600px) {
+  .sidebar { overflow-y:auto; overscroll-behavior:contain; }
+  .sidebar .primary-navigation { flex:0 0 auto; overflow:visible; mask-image:none; -webkit-mask-image:none; }
+  .sidebar>.side-spacer { display:none; }
+  .sidebar>.brand { min-height:60px; }
 }

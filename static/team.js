@@ -264,7 +264,7 @@
   $('portfolioColumns').innerHTML='<option value="0">Automático</option>'+Array.from({length:10},(_,i)=>`<option value="${i+1}">${i+1} ${i===0?'coluna':'colunas'}</option>`).join('');
   $('portfolioColumns').value=String(portfolioColumns);
   $('portfolioColumns').onchange=e=>{portfolioColumns=Number(e.target.value);try{localStorage.setItem('radar-lead-columns',String(portfolioColumns));}catch(_){}portfolioPage=1;renderTeamPortfolioLeads();loadTeamPortfolio()};
-  new ResizeObserver(fitLeadColumns).observe($('portfolioLeads').parentElement);
+  window.RadarLibraries.observeResize($('portfolioLeads').parentElement,fitLeadColumns,{widthOnly:true});
   $('portfolioActivityApply').onclick=()=>{if($('portfolioActivityFrom').value&&$('portfolioActivityTo').value&&$('portfolioActivityFrom').value>$('portfolioActivityTo').value){toast('A data inicial deve ser anterior à final');return;}portfolioPage=1;activityPage=1;loadTeamPortfolio()};
   $('portfolioActivityClear').onclick=()=>{$('portfolioActivityFrom').value='';$('portfolioActivityTo').value='';portfolioPage=1;activityPage=1;loadTeamPortfolio()};
   $('portfolioActivity').ontoggle=()=>{if($('portfolioActivity').open)loadTeamActivity()};

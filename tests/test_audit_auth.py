@@ -76,6 +76,19 @@ class AuthBoundaryTests(unittest.TestCase):
             self.assertEqual(db.execute('SELECT COUNT(*) FROM user_accounts').fetchone()[0], 0)
             self.assertEqual(db.execute('SELECT COUNT(*) FROM sales_profiles').fetchone()[0], 0)
 
+    def test_login_polish_stylesheet_is_public_without_exposing_app_data(self):
+        connection = HTTPConnection('127.0.0.1', self.server.server_port)
+        connection.request('GET', '/radar-polish.css?v=3')
+        response = connection.getresponse()
+        body = response.read()
+        self.assertEqual(response.status, 200)
+        self.assertIn('text/css', response.getheader('Content-Type'))
+        self.assertIn(b'discovery-bell', body)
+        self.assertEqual(response.getheader('X-Content-Type-Options'), 'nosniff')
+        connection.close()
+        self.assertEqual(self.request('GET', '/api/team-profiles')[0], 401)
+        self.assertEqual(self.request('GET', '/admin')[0], 303)
+
     def test_existing_collision_cannot_login_by_username_case_or_email(self):
         self.seed('rootqa')
         for login in ['rootqa', 'RoOtQA', 'rootqa@example.invalid']:

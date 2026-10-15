@@ -1,5 +1,6 @@
 import { parsePhoneNumberFromString } from 'libphonenumber-js/max';
 import Papa from 'papaparse';
+import {observeResize} from './resize-observer.cjs';
 import { createIcons, LayoutDashboard, Building2, Users, ChartNoAxesCombined, Search, Settings2, SlidersHorizontal, ListFilter, Wrench, Target, RefreshCw } from 'lucide';
 const features = new Map();
 function loadFeature(name) {
@@ -10,5 +11,5 @@ function loadFeature(name) {
   }));
   return features.get(name);
 }
-window.RadarLibraries = { parsePhoneNumberFromString, Papa, loadFeature,
+window.RadarLibraries = { parsePhoneNumberFromString, Papa, loadFeature, observeResize,
   icons: () => createIcons({ icons: { LayoutDashboard, Building2, Users, ChartNoAxesCombined, Search, Settings2, SlidersHorizontal, ListFilter, Wrench, Target, RefreshCw } }) };
