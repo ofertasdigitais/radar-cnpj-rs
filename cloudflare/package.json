@@ -6,7 +6,8 @@
   "scripts": {
     "check": "tsc --noEmit",
     "dev": "wrangler dev --local",
-    "test": "vitest run",
+    "test": "vitest run && vitest run --config vitest.current.config.ts",
+    "test:current": "vitest run --config vitest.current.config.ts",
     "db:migrate:local": "wrangler d1 migrations apply radar-cnpj-rs --local",
     "db:migrate:remote": "wrangler d1 migrations apply radar-cnpj-rs --remote",
     "readiness": "python ../tools/release_readiness.py --cloudflare",
@@ -17,8 +18,14 @@
   "devDependencies": {
     "@cloudflare/vitest-plugin": "^1.4.1",
     "@cloudflare/workers-types": "^5.20260928.1",
+    "@types/node": "22.20.5",
     "typescript": "^7.0.2",
     "vitest": "^4.1.11",
     "wrangler": "^4.150.0"
+  },
+  "dependencies": {
+    "@noble/hashes": "2.4.0",
+    "@pdf-lib/fontkit": "1.1.1",
+    "pdf-lib": "1.17.1"
   }
 }

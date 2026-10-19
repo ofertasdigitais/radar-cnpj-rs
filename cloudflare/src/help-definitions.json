@@ -1,0 +1,529 @@
+[
+  {
+    "id": "cloudflare-operacao",
+    "category": "inicio",
+    "title": "O que funciona na versão online do Radar?",
+    "summary": "Leads, BI, agenda, CSV e PDF usam o banco D1 online. Algumas rotinas locais têm uma operação diferente na nuvem.",
+    "steps": [
+      "Use seu login habitual. O tratamento dos leads e o histórico são privados por conta; administradores gerenciam a equipe.",
+      "A captação gratuita consulta o OpenStreetMap pelo Overpass público. Fontes públicas podem ficar indisponíveis; respeite os limites e não interprete ausência de contato como empresa inexistente.",
+      "O coletor Crawlee e o índice OSM em disco dependem de um executor externo e não rodam neste Worker. O Radar informa indisponibilidade em vez de confirmar enriquecimento inexistente.",
+      "A Receita é verificada diariamente pelo GitHub Actions e recebe a nova competência quando a fonte oficial estiver completa. A carga pode demorar; acompanhe o estado de sincronização.",
+      "O administrador pode antecipar a verificação em GitHub → Actions → Receita mensal · Radar Cloudflare → Run workflow. Confira também se o agendamento não foi desativado por inatividade do repositório.",
+      "Backups em pasta Windows não rodam na nuvem. O administrador deve usar exportação e Time Travel do Cloudflare D1 e testar a recuperação em um banco separado.",
+      "A cópia local e o D1 não se sincronizam entre si. Depois da migração, faça os novos lançamentos na versão online para evitar históricos divergentes."
+    ],
+    "action": "captacao",
+    "tags": "cloudflare online receita github crawlee osm backup limitações migração",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "comece-aqui",
+    "category": "inicio",
+    "title": "Como começar a usar o Radar?",
+    "summary": "Da pesquisa ao acompanhamento: encontre empresas, selecione oportunidades e registre cada avanço.",
+    "steps": [
+      "Abra Empresas e filtre o perfil de cliente que deseja atender.",
+      "Abra a empresa e adicione ao seu Painel de Leads.",
+      "No painel, use Tratar lead para registrar etapa, resultado, valores e próxima ação.",
+      "Acompanhe os prazos e consulte o BI para entender sua operação."
+    ],
+    "action": "empresas",
+    "tags": "começar tutorial vendedor rotina",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "contas-privadas",
+    "category": "inicio",
+    "title": "Meus leads aparecem para outros vendedores?",
+    "summary": "Cada conta tem seu próprio tratamento comercial. Administradores têm permissões de gestão da equipe.",
+    "steps": [
+      "Use seu login individual; não compartilhe senha.",
+      "Etapas, valores, histórico e mensagens pertencem à conta e ao responsável.",
+      "Uma empresa pode ter outro atendimento ativo; o Radar pede confirmação para duplicar a abordagem.",
+      "Contatos externos são privados da conta que os captou."
+    ],
+    "action": "leads",
+    "tags": "conta perfil acesso privacidade",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "segmentar",
+    "category": "empresas",
+    "title": "Como encontrar um tipo específico de empresa?",
+    "summary": "Combine categorias comerciais, CNAEs, território e dados de contato para construir seu recorte.",
+    "steps": [
+      "Abra Empresas e clique em Filtrar.",
+      "Pesquise a categoria comercial: restaurante, oficina, clínica ou outro ramo.",
+      "Refine por subcategoria, município, período, porte e disponibilidade de contato.",
+      "Confira a lista e abra uma empresa antes de incluí-la no painel. CNAE não comprova intenção de compra."
+    ],
+    "action": "segmentar",
+    "tags": "filtro funil icp segmento subcategoria cnae restaurante indústria",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "colunas",
+    "category": "empresas",
+    "title": "Como ver mais empresas ou leads lado a lado?",
+    "summary": "As opções de colunas se ajustam à largura disponível, sem exigir uma grade que corte a tela.",
+    "steps": [
+      "Escolha Cartões na área de visualização.",
+      "Selecione Automático ou uma quantidade de colunas disponível.",
+      "Em tablets, teste orientação horizontal. O limite também pode ser definido pelo administrador.",
+      "Use Lista quando precisar comparar campos em linhas."
+    ],
+    "action": "leads",
+    "tags": "tablet colunas cartões lista resolução",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "tratar-lead",
+    "category": "leads",
+    "title": "Como organizar o tratamento de um lead?",
+    "summary": "Registre o que aconteceu e, principalmente, qual será o próximo passo.",
+    "steps": [
+      "Abra Painel de Leads e clique em Tratar lead.",
+      "Atualize a etapa comercial e o resultado do contato; são informações diferentes.",
+      "Registre próxima ação com data e hora, estratégia e observações.",
+      "Informe valores ofertado, negociado e fechado somente quando forem reais.",
+      "Salve e confira o histórico e a fila de trabalho."
+    ],
+    "action": "leads",
+    "tags": "etapa resultado retorno tarefa salvar negociação",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "etapa-resultado",
+    "category": "leads",
+    "title": "Qual a diferença entre etapa e resultado do contato?",
+    "summary": "Etapa descreve a oportunidade. Resultado descreve o retorno de uma abordagem.",
+    "steps": [
+      "Novo e Qualificado organizam a preparação; Contatado indica que a abordagem começou.",
+      "Em negociação representa uma oportunidade em discussão; Convertido e Descartado encerram o ciclo.",
+      "Não respondeu, Respondeu e Pediu retorno são resultados do contato, não etapas de venda.",
+      "Atualize os dois campos conforme a situação real, sem registrar uma venda só porque houve resposta."
+    ],
+    "action": "leads",
+    "tags": "novo qualificado contatado convertido descartado respondeu",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "atividades-data",
+    "category": "leads",
+    "title": "Como ver o que fiz em uma data específica?",
+    "summary": "Use o histórico de atividades para distinguir alterações feitas no dia de leads incluídos no período.",
+    "steps": [
+      "Abra o Painel de Leads do responsável.",
+      "Abra o histórico/atividades e informe a data inicial e final desejadas.",
+      "Consulte os eventos e as alterações registradas.",
+      "O período comercial do relatório usa a entrada do lead no painel; não é a mesma coisa que data de edição."
+    ],
+    "action": "leads",
+    "tags": "sexta feira ontem histórico atividade modificação data",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "whatsapp-formato",
+    "category": "whatsapp",
+    "title": "O número não abre no WhatsApp. O que conferir?",
+    "summary": "Formato correto não garante uma conta WhatsApp. O Radar não faz verificação automática de existência.",
+    "steps": [
+      "Abra Revisar telefone e confira DDD e número.",
+      "Se houver sugestão de nono dígito, confira antes de usar. Um telefone fixo não deve receber 9 automaticamente.",
+      "Teste Abrir WhatsApp; a mensagem ainda depende de você apertar Enviar no aplicativo.",
+      "Após conferir, marque Confirmado, Não localizado, Pendente ou Inválido no lead."
+    ],
+    "action": "whatsapp",
+    "tags": "9 nono dígito inválido não localizado celular ddd",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "mensagens",
+    "category": "whatsapp",
+    "title": "Como usar modelos de mensagem no WhatsApp?",
+    "summary": "Modelos preenchem o texto ao abrir a conversa; não disparam mensagens sozinhos.",
+    "steps": [
+      "No Painel de Leads, clique em Configurar mensagens.",
+      "Cadastre os modelos e escolha qual usar no seletor.",
+      "Abra o WhatsApp do lead e confira o texto e o destinatário.",
+      "Envie manualmente e registre o resultado da abordagem no Radar."
+    ],
+    "action": "leads",
+    "tags": "mensagem automática modelo apresentação whatsapp enviar",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "campanha",
+    "category": "captacao",
+    "title": "Como captar contatos sem importar planilhas?",
+    "summary": "Uma campanha pesquisa estabelecimentos públicos por cidade e categoria no OpenStreetMap.",
+    "steps": [
+      "Abra Ferramentas → Descoberta automática e clique em Criar campanha.",
+      "Escolha nome, município do RS e categoria. Filtros de telefone/site podem reduzir os resultados.",
+      "Opcionalmente habilite enriquecimento dos sites públicos.",
+      "Salve e clique em Coletar agora, ou escolha frequência diária. O servidor deve estar ligado.",
+      "Confira o histórico e abra Contatos externos. A cobertura e a disponibilidade da fonte podem variar."
+    ],
+    "action": "captacao",
+    "tags": "osm openstreetmap descobrir campanha automático capturar",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "crawlee",
+    "category": "captacao",
+    "title": "O que o Crawlee completa?",
+    "summary": "O coletor visita sites comerciais públicos encontrados na campanha, quando você habilita essa opção.",
+    "steps": [
+      "Habilite enriquecimento de sites ao criar ou editar a campanha.",
+      "O coletor procura telefones, e-mails e links publicados de redes sociais.",
+      "Ele respeita bloqueios e robots.txt, e não acessa áreas privadas ou perfis sociais.",
+      "Não inventa faturamento, funcionários, intenção de compra ou existência de WhatsApp."
+    ],
+    "action": "captacao",
+    "tags": "crawlee enriquecer site instagram redes sociais email",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "contato-para-lead",
+    "category": "captacao",
+    "title": "Como levar um contato externo ao Painel de Leads?",
+    "summary": "Qualifique o contato e vincule um CNPJ existente no Radar, sem criar uma empresa oficial fictícia.",
+    "steps": [
+      "Abra Contatos externos e clique em Encaminhar ao painel.",
+      "Informe o CNPJ correto e escolha um responsável da sua própria conta.",
+      "Confira a empresa encontrada e confirme o encaminhamento.",
+      "O vínculo preserva o cadastro oficial. Etapa e observações de um atendimento existente não são sobrescritas.",
+      "Sem CNPJ localizado, continue tratando o contato externo; ele não entra no BI oficial."
+    ],
+    "action": "contatos",
+    "tags": "qualificar vincular encaminhar cnpj origem unificar",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "csv-contatos",
+    "category": "captacao",
+    "title": "Como importar contatos por CSV?",
+    "summary": "A importação é opcional e serve para fontes próprias, indicações e eventos.",
+    "steps": [
+      "Abra Importar CSV e baixe o modelo se precisar.",
+      "Selecione um arquivo de até 2 MB e 500 linhas.",
+      "Mapeie as colunas e revise a prévia; corrija erros antes de confirmar.",
+      "Duplicados iguais são preservados. A importação não substitui a base da Receita."
+    ],
+    "action": "csv",
+    "tags": "csv importar tabela planilha duplicados",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "exportar-crm",
+    "category": "leads",
+    "title": "Como exportar minha seleção de leads?",
+    "summary": "Monte um CSV com os campos e os filtros desejados, sem depender de sincronização com CRM.",
+    "steps": [
+      "No Painel de Leads, abra Exportar CSV.",
+      "Escolha nome do arquivo, separador, etapa e situação do WhatsApp.",
+      "Selecione as colunas e gere o arquivo.",
+      "Confira o mapeamento ao importar no destino. Nesta etapa não há envio automático ao Base44."
+    ],
+    "action": "leads",
+    "tags": "csv exportar crm campos colunas separador",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "bi-calculos",
+    "category": "bi",
+    "title": "O que os indicadores comerciais realmente medem?",
+    "summary": "O BI usa registros do responsável e do recorte selecionados; não estima faturamento da empresa.",
+    "steps": [
+      "Conversão comercial: quantidade de Convertidos dividida pelos leads incluídos no recorte.",
+      "Receita fechada: soma dos valores fechados dos leads Convertidos. Pipeline: valores negociados dos leads ainda ativos.",
+      "Prazo de primeiro contato: intervalo entre entrada e primeiro contato registrado. Tempo até fechar considera Convertidos com datas válidas.",
+      "Sem datas válidas, uma média fica sem amostra; zero monetário pode significar valor não preenchido. Confira a qualidade dos dados.",
+      "Distribuição por etapa mostra o estoque atual, não a passagem histórica entre etapas."
+    ],
+    "action": "bi",
+    "tags": "conversão fórmula percentual receita pipeline ticket média zero período",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "pdf",
+    "category": "bi",
+    "title": "Como gerar um PDF com a identidade do Radar?",
+    "summary": "Personalize título, apresentação, notas e seções antes de baixar.",
+    "steps": [
+      "No Painel de Leads, abra Rotina do vendedor e relatórios.",
+      "Clique em Personalizar relatório PDF. No BI, use Personalizar PDF deste recorte.",
+      "Escolha as seções e revise o responsável e o período.",
+      "Gere a prévia e baixe. Dados do documento são privados; confira antes de compartilhar."
+    ],
+    "action": "pdf",
+    "tags": "relatório pdf impressão baixar personalizado",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "sem-resultados",
+    "category": "problemas",
+    "title": "A campanha não trouxe contatos. E agora?",
+    "summary": "Uma falha da fonte é diferente de uma coleta concluída sem resultados.",
+    "steps": [
+      "Confira o estado e a mensagem da última rodada. Falhou não deve ser tratado como sucesso.",
+      "Verifique se a campanha está ativa e se o município e a categoria estão corretos.",
+      "Filtros obrigatórios de telefone/site podem excluir estabelecimentos. Amplie um critério por vez.",
+      "Se a fonte estiver indisponível, aguarde antes de tentar novamente. Não crie campanhas repetidas para contornar limites."
+    ],
+    "action": "captacao",
+    "tags": "erro timeout falhou indisponível vazio coleta",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "nao-salvou",
+    "category": "problemas",
+    "title": "Não consegui salvar ou perdi acesso. Como proceder?",
+    "summary": "Evite repetir uma gravação sem conferir o estado final.",
+    "steps": [
+      "Leia a mensagem de erro; confira campos obrigatórios e conexão.",
+      "Sessão expirada exige entrar novamente. Seu administrador pode ter alterado o acesso.",
+      "Após salvar, recarregue a lista ou confira o histórico antes de repetir a ação.",
+      "Não restaure um backup para resolver um problema visual. Informe a tela, horário e mensagem ao administrador."
+    ],
+    "action": "leads",
+    "tags": "salvar sessão erro acesso conexão",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "pesquisa",
+    "category": "captacao",
+    "title": "Pesquisa e CEP são automáticos?",
+    "summary": "São consultas auxiliares acionadas pelo vendedor, diferentes das campanhas automáticas.",
+    "steps": [
+      "Em Pesquisa e CEP, informe empresa e cidade para montar links de pesquisa.",
+      "Abra o destino desejado para conferir site, mapa ou presença digital.",
+      "Na consulta de CEP, somente o CEP informado é enviado à BrasilAPI.",
+      "Resultados podem estar desatualizados e não são gravados automaticamente."
+    ],
+    "action": "pesquisa",
+    "tags": "cep brasilapi mapa linkedin pesquisar",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "admin-parametros",
+    "category": "admin",
+    "title": "Como alterar parâmetros sem modificar código?",
+    "summary": "Use o /admin com a conta administrativa. Parâmetros ficam em rascunho até salvar.",
+    "steps": [
+      "Abra Administração e escolha a seção.",
+      "Altere os parâmetros e revise o contador de pendências.",
+      "Clique em Salvar parâmetros e recarregue o Radar para aplicar opções visuais.",
+      "Contas e ações de manutenção têm botões próprios. Outra aba pode causar conflito de revisão; atualize antes de tentar novamente."
+    ],
+    "action": "admin",
+    "tags": "admin parâmetro configuração",
+    "admin_only": true,
+    "published": true
+  },
+  {
+    "id": "backup",
+    "category": "admin",
+    "title": "Como proteger e testar a recuperação da base?",
+    "summary": "Backup deve ser consistente, privado e verificável; teste não deve sobrescrever a operação.",
+    "steps": [
+      "Em Banco e manutenção, crie e baixe uma cópia do SQLite.",
+      "Guarde o arquivo fora da pasta pública, com acesso restrito.",
+      "Use Verificar recuperação para abrir uma cópia temporária, verificar integridade e comparar os registros.",
+      "Um teste bem-sucedido não restaura a produção. Uma recuperação real exige parada planejada e preservação do banco atual.",
+      "Chaves Windows DPAPI exigem o mesmo usuário; recadastre-as ao migrar para outro ambiente."
+    ],
+    "action": "admin",
+    "tags": "backup restaurar recuperação banco sqlite",
+    "admin_only": true,
+    "published": true
+  },
+  {
+    "id": "agenda-retornos",
+    "category": "leads",
+    "title": "Como usar a agenda e registrar cada contato?",
+    "summary": "A agenda reúne retornos vencidos, de hoje, próximos dias e leads sem agendamento.",
+    "steps": [
+      "No Painel de Leads, abra Agenda e retornos e escolha a fila desejada.",
+      "Pesquise por empresa, CNPJ ou telefone. A busca percorre toda a agenda, mesmo que só os primeiros resultados estejam na tela.",
+      "Clique em Registrar contato, informe o resultado real e, se houver retorno, preencha ação com data e hora.",
+      "As notas entram no histórico sem substituir observações anteriores. Abrir WhatsApp não comprova contato.",
+      "Se outra sessão alterou a oportunidade, atualize ou reabra a ficha antes de tentar salvar novamente."
+    ],
+    "action": "leads",
+    "tags": "agenda retorno lembrete tarefa registro contato concorrência",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "nao-contatar",
+    "category": "leads",
+    "title": "Como impedir novas abordagens a uma empresa?",
+    "summary": "Não contatar é uma restrição por conta: preserva histórico e valores, mas impede o fluxo de abordagem do Radar.",
+    "steps": [
+      "Na agenda, clique em Não contatar e registre o motivo.",
+      "A empresa sai da agenda e do CSV de leads; o WhatsApp fica indisponível no Radar. O histórico permanece.",
+      "O bloqueio vale para os responsáveis desta conta, não para outras contas.",
+      "Para retomar, abra Não contatar no fim da agenda e confirme que possui autorização. O Radar não cancela mensagens já enviadas nem contatos feitos fora do sistema."
+    ],
+    "action": "leads",
+    "tags": "bloqueio consentimento não contatar reautorizar exportação",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "resultados-metas",
+    "category": "bi",
+    "title": "Como comparar resultados e acompanhar metas?",
+    "summary": "Entradas usam a inclusão do lead; contatos usam o registro; receita usa a data de fechamento.",
+    "steps": [
+      "No BI, use Entradas, contatos e fechamentos para escolher o período de resultados.",
+      "Compare com o recorte anterior da mesma duração ou use Últimos 7 dias e Este mês.",
+      "Troque a métrica do gráfico ou abra Ver evolução em tabela para conferir os valores.",
+      "Escolha o mês das metas e salve objetivos de receita, contatos e vendas. As metas são privadas do responsável.",
+      "O progresso usa todo o mês escolhido. Fechamentos sem data válida não entram na receita do período. Os dados são operacionais, não um balanço contábil."
+    ],
+    "action": "bi",
+    "tags": "meta objetivo comparação semana mês receita fechamento datas",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "backup-segunda-copia",
+    "category": "admin",
+    "title": "Como configurar o backup diário e a segunda cópia?",
+    "summary": "Backup automático roda com o servidor ligado. A segunda cópia é conferida por hash, sem apagar backups antigos.",
+    "steps": [
+      "Em /admin → Banco e manutenção, configure Backup automático diário e uma pasta absoluta para a segunda cópia.",
+      "Salve os parâmetros e use Criar backup para testar o destino. Confira se a segunda cópia aparece como conferida.",
+      "Uma pasta no mesmo computador não protege contra perda do equipamento. Para proteção externa, use pasta sincronizada ou de rede e confira a sincronização separadamente.",
+      "Use Verificar recuperação na lista de backups para ensaiar uma restauração em cópia temporária. Nunca publique o banco no GitHub."
+    ],
+    "action": "admin",
+    "tags": "backup diário automático segunda cópia nuvem sha256 sincronização",
+    "admin_only": true,
+    "published": true
+  },
+  {
+    "id": "captacao-horarios",
+    "category": "captacao",
+    "title": "Como receber recomendações de manhã, à tarde e no fim do dia?",
+    "summary": "Você configura até três horários por campanha. A busca automática ajuda na descoberta, sem criar leads ativos ou enviar mensagens.",
+    "steps": [
+      "Abra Ferramentas → Descoberta automática → Criar campanha. Escolha município, categoria e, se desejar, um perfil comercial de referência.",
+      "Na frequência, escolha Automática · até 3 horários por dia. O padrão é 08:00, 13:00 e 17:00; ajuste entre um e três horários.",
+      "Salve a campanha. Computador e servidor precisam estar ligados; os horários seguem o relógio local do servidor.",
+      "Todas as campanhas e consultas manuais compartilham até seis rodadas por conta a cada 24 horas e o limite global. Não é garantia de três rodadas para cada campanha.",
+      "Use Pausar para interromper novas coletas. Ao retornar de uma parada, o Radar não dispara todas as rodadas perdidas."
+    ],
+    "action": "captacao",
+    "tags": "agendamento três horarios manhã tarde automático pausar frequência",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "recomendacoes",
+    "category": "captacao",
+    "title": "Como analisar recomendações e controlar os avisos?",
+    "summary": "A fila é privada da sua conta e fica separada dos leads ativos. Correspondência de cidade e categoria não comprova intenção de compra.",
+    "steps": [
+      "Abra Recomendações pelo sino no topo ou pela Descoberta automática. Há somente um aviso por rodada que encontrou contatos novos.",
+      "Na seção Para analisar, confira cidade, campanha, motivo da recomendação e contatos publicados. Selecione individualmente ou marque vários e use Guardar seleção.",
+      "Em Selecionadas, clique em Tratar contato para abrir o cadastro externo. Só encaminhe ao Painel de Leads depois de conferir o CNPJ existente na base.",
+      "Use Descartar para tirar uma sugestão da fila. Novas coletas do mesmo registro não a sugerem novamente; o contato externo e o histórico são preservados.",
+      "No sino, desmarque Receber avisos para silenciar futuras notificações. Isso não pausa campanhas nem apaga recomendações. Avisos são internos ao Radar, não push, e-mail ou WhatsApp."
+    ],
+    "action": "captacao",
+    "tags": "notificação sino recomendação selecionar descartar analisar interesse captura",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "osm-local",
+    "category": "captacao",
+    "title": "De onde vêm os contatos e como a base OpenStreetMap é atualizada?",
+    "summary": "A busca padrão usa um índice público local separado do banco comercial. Crawlee tenta completar os sites informados, sem assinatura paga.",
+    "steps": [
+      "Na Descoberta automática, confira a data e a disponibilidade da Base OpenStreetMap local. A cobertura depende dos estabelecimentos publicados no mapa.",
+      "Filtros de telefone e site exigem esses dados no mapa, antes de consultar sites. Deixe-os desmarcados para ampliar a busca.",
+      "A atualização semanal do índice é opcional e administrada em /admin → Captação automática; exige servidor ligado, internet e espaço em disco.",
+      "O Crawlee respeita robots.txt e não garante contatos em todos os sites. Não confirma WhatsApp, faturamento, funcionários ou intenção de compra.",
+      "Nada encontrado não significa que não existem empresas na região; confira cobertura, filtros e histórico."
+    ],
+    "action": "captacao",
+    "tags": "openstreetmap osm local geofabrik índice atualização crawlee gratuito",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "audit-acesso",
+    "category": "admin",
+    "title": "Como ficam acesso, bloqueios e contas desativadas?",
+    "summary": "A identidade administrativa do servidor é separada das contas comerciais; nomes iguais não concedem permissões.",
+    "steps": [
+      "Crie e altere contas em /admin → Contas. Não compartilhe a senha administrativa com vendedores.",
+      "Oito tentativas por acesso em 15 minutos geram bloqueio temporário. Usuário e e-mail da mesma conta compartilham esse limite.",
+      "Desativar uma conta impede novas sessões e suspende suas coletas. Resultados de uma rodada em andamento não são gravados após a desativação.",
+      "Redefinir senha ou permissão revoga sessões. A atualização de segurança pode exigir entrar novamente; os leads não são apagados.",
+      "Dados antigos sem responsável não são atribuídos automaticamente por semelhança de nome ou e-mail. Solicite revisão administrativa."
+    ],
+    "action": "admin",
+    "tags": "segurança conta bloqueio acesso sessão administrador",
+    "admin_only": true,
+    "published": true
+  },
+  {
+    "id": "audit-bi-ativos",
+    "category": "bi",
+    "title": "Por que um lead concluído sai das prioridades do BI?",
+    "summary": "Concluído, Convertido e Descartado são estados encerrados, não tarefas pendentes.",
+    "steps": [
+      "Leads encerrados continuam no histórico e na distribuição por etapa, mas saem dos prazos, maturidade e matriz de ação.",
+      "Somente Convertido entra na receita fechada. Concluído sem venda não é faturamento.",
+      "Os grupos Vencidos, Hoje a vencer, Próximos 7 dias e Sem prazo não se sobrepõem.",
+      "Receita e valores usam centavos registrados, sem inventar estimativas. O recorte por período considera a entrada do lead; não é um relatório de faturamento por data de fechamento."
+    ],
+    "action": "bi",
+    "tags": "bi concluído conversão ativos receita atraso prazo",
+    "admin_only": false,
+    "published": true
+  },
+  {
+    "id": "audit-publicacao",
+    "category": "admin",
+    "title": "O CRM e a migração Cloudflare já estão conectados?",
+    "summary": "Não. A estrutura de integração está preparada localmente; publicação e envio continuam desligados.",
+    "steps": [
+      "CSV continua disponível para importação manual. A ponte Base44 exige receptor, mapeamento de responsáveis e persistência testados.",
+      "A configuração de URL e segredo não envia dados. Nunca coloque o segredo no navegador ou em arquivos de exportação.",
+      "Antes de publicar o Worker, execute o verificador de prontidão. A versão legada não cobre todos os recursos atuais e a publicação está bloqueada.",
+      "Mantenha backup SQLite consistente de todas as tabelas e valide uma restauração isolada. GitHub não é destino para o banco real.",
+      "Nenhuma consulta paga Serpro ou serviço de IA foi habilitado. Confirme custos e limites da conta de destino antes de liberar integrações."
+    ],
+    "action": "admin",
+    "tags": "crm base44 cloudflare migração backup publicação gratuito",
+    "admin_only": true,
+    "published": true
+  }
+]

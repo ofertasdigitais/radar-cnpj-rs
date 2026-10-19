@@ -1,0 +1,276 @@
+{
+  "fields": {
+    "site_name": {
+      "group": "general",
+      "label": "Nome do site",
+      "type": "text",
+      "default": "Radar CNPJ",
+      "max": 80
+    },
+    "copyright": {
+      "group": "general",
+      "label": "Rodapé / copyright",
+      "type": "text",
+      "default": "© {ano} Radar CNPJ · Todos os direitos reservados.",
+      "max": 180
+    },
+    "default_theme": {
+      "group": "general",
+      "label": "Tema inicial",
+      "type": "select",
+      "default": "dark",
+      "options": {
+        "dark": "Escuro",
+        "light": "Claro"
+      }
+    },
+    "animations": {
+      "group": "general",
+      "label": "Animações e transições CSS",
+      "type": "bool",
+      "default": true,
+      "help": "Controla os efeitos da interface; não interrompe carregamentos ou gráficos em JavaScript."
+    },
+    "max_columns": {
+      "group": "general",
+      "label": "Limite de colunas",
+      "type": "int",
+      "default": 10,
+      "min": 1,
+      "max": 10,
+      "help": "A tela continua limitando as colunas à largura disponível."
+    },
+    "registration": {
+      "group": "general",
+      "label": "Cadastro público de contas",
+      "type": "select",
+      "default": "inherit",
+      "options": {
+        "inherit": "Manter regra atual",
+        "off": "Desativado",
+        "on": "Permitido"
+      },
+      "help": "Contas cadastradas publicamente sempre começam como vendedores."
+    },
+    "test_leads": {
+      "group": "general",
+      "label": "Permitir criação de leads de teste",
+      "type": "bool",
+      "default": true
+    },
+    "contact_sla_hours": {
+      "group": "commercial",
+      "label": "Prazo padrão do primeiro contato (horas)",
+      "type": "int",
+      "default": 48,
+      "min": 1,
+      "max": 720,
+      "help": "Usado quando o responsável ainda não tem um prazo individual."
+    },
+    "stalled_days": {
+      "group": "commercial",
+      "label": "Negociação parada após (dias)",
+      "type": "int",
+      "default": 7,
+      "min": 1,
+      "max": 365
+    },
+    "report_title": {
+      "group": "commercial",
+      "label": "Título padrão do relatório PDF",
+      "type": "text",
+      "default": "Relatório comercial",
+      "max": 100
+    },
+    "report_footer": {
+      "group": "commercial",
+      "label": "Rodapé do relatório PDF",
+      "type": "text",
+      "default": "Uso interno · Dados privados do responsável",
+      "max": 120
+    },
+    "capture_enabled": {
+      "group": "capture",
+      "label": "Permitir coleta OpenStreetMap",
+      "type": "bool",
+      "default": true
+    },
+    "capture_osm_mode": {
+      "group": "capture",
+      "label": "Fonte gratuita OpenStreetMap",
+      "type": "select",
+      "default": "local",
+      "options": {
+        "local": "Índice local · sem depender do Overpass",
+        "overpass": "Overpass público · disponibilidade limitada"
+      },
+      "help": "Local não faz consultas à API pública. Exige preparar o índice regional local."
+    },
+    "osm_local_auto_update": {
+      "group": "capture",
+      "label": "Atualizar base OSM local semanalmente",
+      "type": "bool",
+      "default": false,
+      "help": "Baixa arquivo público da Região Sul (~406 MB) e reconstrói o índice local. Exige espaço em disco e servidor ligado; nenhuma assinatura."
+    },
+    "capture_scheduler": {
+      "group": "capture",
+      "label": "Executar campanhas agendadas automaticamente",
+      "type": "bool",
+      "default": true,
+      "env": "RADAR_DISCOVERY_AUTO",
+      "help": "Campanhas ativas com horários definidos ou frequência diária. Exige servidor ligado e respeita limites por conta e globais."
+    },
+    "enrichment_enabled": {
+      "group": "capture",
+      "label": "Permitir enriquecimento Crawlee",
+      "type": "bool",
+      "default": true,
+      "help": "Só completa sites públicos quando também habilitado na campanha."
+    },
+    "capture_runs_account": {
+      "group": "capture",
+      "label": "Rodadas por conta / 24 horas",
+      "type": "int",
+      "default": 6,
+      "min": 1,
+      "max": 6
+    },
+    "capture_runs_global": {
+      "group": "capture",
+      "label": "Rodadas totais / 24 horas",
+      "type": "int",
+      "default": 30,
+      "min": 1,
+      "max": 30
+    },
+    "capture_sites": {
+      "group": "capture",
+      "label": "Sites por rodada",
+      "type": "int",
+      "default": 10,
+      "min": 1,
+      "max": 10
+    },
+    "sync_scheduler": {
+      "group": "system",
+      "label": "Verificar atualização mensal da Receita",
+      "type": "bool",
+      "default": true,
+      "env": "RADAR_AUTO_SYNC",
+      "help": "A desativação pausa novas verificações; não interrompe uma carga já iniciada."
+    },
+    "backup_daily": {
+      "group": "system",
+      "label": "Backup automático diário",
+      "type": "bool",
+      "default": true,
+      "help": "Executado com o servidor ligado; não apaga backups antigos."
+    },
+    "backup_directory": {
+      "group": "system",
+      "label": "Pasta da segunda cópia de backup",
+      "type": "path",
+      "default": "",
+      "max": 500,
+      "help": "Pasta absoluta fora do projeto. Pasta no mesmo disco não protege contra perda do computador. Para proteção externa, use pasta de rede ou sincronizada e confira a sincronização."
+    },
+    "serpro_visible": {
+      "group": "integrations",
+      "label": "Mostrar monitor Serpro no Radar",
+      "type": "bool",
+      "default": false,
+      "help": "Visibilidade não ativa consultas. Serpro permanece bloqueado para evitar custos."
+    },
+    "serpro_environment": {
+      "group": "integrations",
+      "label": "Ambiente Serpro",
+      "type": "select",
+      "default": "homologacao",
+      "env": "RADAR_SERPRO_ENV",
+      "options": {
+        "homologacao": "Homologação",
+        "producao": "Produção"
+      }
+    },
+    "serpro_daily_limit": {
+      "group": "integrations",
+      "label": "Limite técnico Serpro / dia",
+      "type": "int",
+      "default": 50,
+      "min": 1,
+      "max": 50,
+      "env": "RADAR_SERPRO_DAILY_LIMIT",
+      "help": "Este número é uma trava do Radar. NÃO representa uma franquia gratuita do Serpro."
+    },
+    "base44_endpoint": {
+      "group": "integrations",
+      "label": "URL de recebimento do CRM Base44",
+      "type": "url",
+      "default": "",
+      "max": 500,
+      "env": "RADAR_BASE44_ENDPOINT",
+      "help": "Somente HTTPS em domínio Base44. Salvar não envia leads nem ativa assinatura."
+    },
+    "base44_secret": {
+      "group": "integrations",
+      "label": "Segredo compartilhado Base44",
+      "type": "secret",
+      "default": "",
+      "min": 32,
+      "max": 500,
+      "env": "RADAR_BASE44_SECRET"
+    },
+    "serpro_key": {
+      "group": "integrations",
+      "label": "Serpro · Consumer Key",
+      "type": "secret",
+      "default": "",
+      "min": 8,
+      "max": 500,
+      "env": "RADAR_SERPRO_CONSUMER_KEY"
+    },
+    "serpro_secret": {
+      "group": "integrations",
+      "label": "Serpro · Consumer Secret",
+      "type": "secret",
+      "default": "",
+      "min": 8,
+      "max": 500,
+      "env": "RADAR_SERPRO_CONSUMER_SECRET"
+    },
+    "serpro_cpf": {
+      "group": "integrations",
+      "label": "Serpro · CPF responsável",
+      "type": "secret",
+      "default": "",
+      "min": 11,
+      "max": 11,
+      "env": "RADAR_SERPRO_USER_CPF"
+    }
+  },
+  "categories": {
+    "inicio": "Primeiros passos",
+    "empresas": "Empresas e segmentação",
+    "leads": "Tratamento de leads",
+    "whatsapp": "WhatsApp e telefones",
+    "captacao": "Captação e contatos externos",
+    "bi": "Métricas e relatórios",
+    "problemas": "Resolver problemas",
+    "admin": "Administração"
+  },
+  "actions": {
+    "": "Sem atalho",
+    "empresas": "Consultar empresas",
+    "segmentar": "Abrir filtros",
+    "leads": "Painel de Leads",
+    "whatsapp": "Revisar telefone",
+    "captacao": "Descoberta automática",
+    "contatos": "Contatos externos",
+    "csv": "Importar contatos",
+    "pesquisa": "Pesquisa e CEP",
+    "bi": "BI comercial",
+    "pdf": "Relatório personalizado",
+    "admin": "Administração"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "$schema":"node_modules/wrangler/config-schema.json",
+  "name":"radar-cnpj-rs",
+  "account_id":"4e340bbc4dc493ac0e2f86cc0594a225",
+  "main":"src/worker-current.ts",
+  "compatibility_date":"2026-09-28",
+  "compatibility_flags":["nodejs_compat"],
+  "workers_dev":true,
+  "preview_urls":false,
+  "assets":{"directory":"../static","binding":"ASSETS","run_worker_first":true},
+  "d1_databases":[{"binding":"DB","database_name":"radar-cnpj-rs","database_id":"1f91e449-5b76-4daa-9989-afff59545456","migrations_dir":"migrations-current"}],
+  "vars":{"RADAR_ALLOW_REGISTRATION":"0","RADAR_ENV":"production","RECEITA_SYNC_AUTOMATION":"1"},
+  "triggers":{"crons":["* * * * *"]},
+  "observability":{"enabled":true,"head_sampling_rate":0.1},
+  "limits":{"cpu_ms":5000}
+}

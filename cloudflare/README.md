@@ -1,20 +1,16 @@
 # Radar CNPJ RS no Cloudflare
 
-## Bloqueio de publicação — auditoria de 07/10/2026
+## Publicação atual — 19/10/2026
 
-**Este Worker é uma versão legada, não uma cópia funcional do Radar atual.**
-Não execute os antigos comandos de importação/publicação para substituir produção.
-`npm run readiness` compara o esquema em memória, lê o SQLite em modo somente
-leitura e retorna código 2 enquanto faltar paridade. `npm run deploy` e a migração
-remota passam por essa trava; chamar Wrangler diretamente a contorna.
-Veja `../docs/AUDITORIA-RADAR-20261007.md` para a sequência de migração e bloqueios.
-O arquivo `wrangler.staging.example.jsonc` é um modelo com IDs inválidos de
-propósito. O destino antigo em `wrangler.jsonc` foi preservado, não reutilizado.
-Nenhuma publicação ou cobrança foi feita nesta auditoria.
+[Radar online](https://radar-cnpj-rs.radar-cnpj-rs-cloudflare.workers.dev) ·
+[Validações e limites](../docs/STATUS-20261019.md).
 
-Esta pasta contém a versão Cloudflare do Radar. A aplicação local em Python e o
-banco `data/radar.db` continuam sendo a fonte operacional até a migração remota
-ser validada.
+`wrangler.jsonc` e `wrangler.current.jsonc` apontam ao entrypoint `src/worker-current.ts`
+e às migrações `migrations-current/`. `src/worker.ts`, `migrations/` e
+`scripts/export_d1.py` são históricos: não usar para atualizar a produção atual.
+
+A aplicação local e `data/radar.db` foram preservados. Não há sincronização
+bidirecional: os novos lançamentos devem ser feitos na versão online.
 
 Arquitetura:
 
@@ -27,39 +23,54 @@ Arquitetura:
 Nunca publique `radar.db`, credenciais DPAPI, segredos de sessão, dumps SQL com
 dados reais ou arquivos de importação no Git.
 
-## Registro histórico de publicação (não revalidado em 07/10/2026)
+## Isolamento de destino
 
-- URL fixa: <https://radar-cnpj-rs.radar-cnpj-rs-cloudflare.workers.dev>
-- ambiente: Cloudflare Workers + Static Assets + D1;
-- cadastro público: desativado;
-- carga inicial: 9.012 empresas, 2 contas, 2 perfis comerciais e 12 vínculos;
-- base local preservada: 133.042 empresas.
-
-A sincronização cadastral e o monitoramento contínuo ainda não foram migrados
-para o Worker. Esses comandos retornam bloqueio explícito no ambiente Cloudflare
-para não aparentarem uma atualização que não ocorreu.
+Worker `radar-cnpj-rs`, D1 `radar-cnpj-rs`, UUID `1f91e449-5b76-4daa-9989-afff59545456`.
+Não reutilizar binding, rotas ou recursos da Starker. O plano Workers Paid existente
+foi confirmado pelo proprietário; os recursos são separados, mas franquias e
+eventuais excedentes de cobrança são compartilhados na conta Cloudflare.
 
 ## Validação local
 
 ```powershell
-npm install
+npm ci --ignore-scripts
 npm run check
 npm test
 npx wrangler deploy --dry-run
 ```
 
-## Preparação da carga D1
-
-O plano gratuito do D1 aceita 100.000 linhas gravadas por dia, contando também
-as atualizações dos índices. Por isso, a carga inicial gratuita é limitada às
-9.000 empresas mais recentes, acrescidas de qualquer empresa já presente em
-uma carteira. O banco local completo não é modificado.
+`npm run readiness` verifica integridade em modo somente leitura, paridade de todas
+as tabelas, destino exclusivo, TypeScript e testes do Worker atual/legado em bancos
+temporários. Não prova, sozinho, que segredos, rede ou pipeline remoto funcionam.
 
 ```powershell
-python .\scripts\export_d1.py
+python .\scripts\prepare_current.py --source ..\data\radar.db --output ..\data\NOVA-PASTA-PRIVADA
 ```
 
-Use `--company-limit 0` para gerar a carga integral para validação local ou para
-um ambiente cuja franquia comporte a importação. Cada execução cria um novo
-diretório ignorado pelo Git em `data/cloudflare-import` e produz um manifesto
-com contagens e hashes.
+Esse comando cria snapshot consistente e manifesto de todas as tabelas, DDL e
+carga separados, sem alterar a origem. A carga inicial já foi realizada: **não
+reimportar o snapshot em produção**, pois isso pode conflitar com dados mais novos.
+Para nova migração, usar banco vazio isolado, ensaiar a restauração e conferir
+contagens, hashes, relações e propriedade antes de qualquer virada.
+
+## Receita mensal e captação
+
+O workflow público `.github/workflows/receita-cloudflare.yml` verifica a competência
+diariamente às 09:23 UTC (06:23 em São Paulo), e também aceita execução manual.
+Usa apenas `RADAR_WORKERS_URL` e `RADAR_RECEITA_IMPORT_SECRET`. Nunca cadastrar
+token da conta Cloudflare nesse workflow. O endpoint aceita somente campos oficiais
+do RS e não altera leads, contas, valores ou histórico. Só publica a competência
+depois de conferir lotes e catálogo CNAE; não promete rollback dos campos públicos
+de lotes anteriores se a execução falhar.
+
+O GitHub pode desativar o agendamento após 60 dias sem atividade. Falhas da Receita,
+tempo máximo do runner e indisponibilidade de fontes devem ser acompanhados em
+Actions e no estado de sincronização. O botão local de iniciar carga não dispara
+GitHub Actions: para antecipar, usar Actions → Receita mensal → Run workflow.
+
+Campanhas de captação usam Overpass/OpenStreetMap público e cron que verifica os
+horários configurados. Sem campanhas configuradas não há captura automática.
+Crawlee, índice OSM em disco e backup em pasta Windows não executam no Worker.
+Serpro continua desativado para não gerar custos. Exportação D1/Time Travel e ensaio
+de recuperação são feitos pelo administrador no fluxo Cloudflare, não como arquivo
+SQLite local do painel.

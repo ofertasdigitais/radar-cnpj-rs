@@ -1,18 +1,22 @@
 # Radar CNPJ RS
 
-Estado atual e limites da implantação: [situação em 14/10/2026](docs/STATUS-20261014.md).
+Estado atual e limites da implantação: [situação em 19/10/2026](docs/STATUS-20261019.md).
+
+Radar online: [acessar a plataforma](https://radar-cnpj-rs.radar-cnpj-rs-cloudflare.workers.dev).
 
 Aplicação web para consultar empresas abertas recentemente no Rio Grande do Sul, com filtros por período, CNAE, segmento, município, região, situação cadastral e MEI.
 
-## Estado desta versão — 09/10/2026
+## Estado desta versão — 19/10/2026
 
-A versão funcional é **Python/SQLite local**, com componentes React integrados,
+O Radar está publicado em **Cloudflare Workers + D1**, com componentes React integrados,
 Painel de Leads, BI comercial, PDF personalizado, captação, `/admin` e Central
-de Ajuda. O código pode ser versionado sem migrar nem substituir o banco.
+de Ajuda. A cópia **Python/SQLite local** e seu banco foram preservados.
 CRM/Base44 fica para outra versão e **não possui sincronização ativa**; sua
-estrutura foi preservada por enquanto. Cloudflare está em espera: o Worker
-legado não tem paridade com todas as funções atuais. Não publique essa pasta
-nem execute migrações remotas antes de fechar os bloqueios documentados.
+estrutura foi preservada por enquanto. O entrypoint atual é `cloudflare/src/worker-current.ts`;
+o Worker legado não deve ser publicado. Veja [operação Cloudflare](cloudflare/README.md).
+
+**A versão local e o D1 não se sincronizam entre si.** Após a migração, faça os novos
+lançamentos na versão online. GitHub contém código, nunca os dados comerciais.
 
 - [Validações e limites desta entrega](docs/ENTREGA-QA-20261009.md)
 - [Segurança, interface e ambiente isolado](docs/SEGURANCA-E-INTERFACE.md)
@@ -41,7 +45,7 @@ backups, `.env`, credenciais, arquivos SQLite e logs ficam fora do Git.
 - exportação CSV;
 - layout responsivo para computador, tablet e celular.
 
-## Persistência para a equipe
+## Persistência para a equipe — cópia local
 
 Os dados ficam no SQLite em `data/radar.db`. Isso inclui os registros trazidos
 da Receita, perfis de prospecção, leads selecionados em cada painel, etapa do
