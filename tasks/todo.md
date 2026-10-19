@@ -12,4 +12,4 @@
 - [x] Checkpoint: TypeScript/gate e testes atuais/legados aprovados em banco descartável; APIs e interface conferidas com D1 isolado e online.
 - [x] Paid existente confirmado pelo proprietário; Worker exclusivo publicado sem mudanças em recursos Starker.
 - [x] Virada: backup/segunda cópia, carga completa, contagens/FK/quick_check e smoke vendedor/admin online aprovados. Snapshot de 19/10 confirmou origem logicamente igual à carga.
-- [ ] Entrega: GitHub atualizado, URL workers.dev verificada, limitações operacionais documentadas.
+- [x] Entrega: GitHub main/branch atualizados em 23a1916, URL workers.dev e logins verificados; limitações documentadas. Workflow Receita ativo e execução 39263337796 aprovada. Backup D1 restaurado isoladamente e conteúdo das 35 tabelas conferido.

@@ -49,5 +49,12 @@ lógicas desde a carga. Smoke externo passou para vendedor e administrador,
 incluindo PDF, CSV, integridade, privacidade e revogação. Readiness atual aprovado.
 O limite PBKDF2 da produção, ausente no workerd local, foi tratado preservando
 SHA256/260k/salts/hashes existentes, com biblioteca fixada e vetor Python independente.
-Falta concluir o GitHub e ativar/testar o workflow mensal na branch padrão.
+GitHub main/branch atualizados em `23a1916`; workflow mensal ativo na branch padrão
+com segredos exclusivos e primeira verificação real aprovada em `39263337796`.
+Backup D1 exportado/restaurado isoladamente; conteúdo original das 35 tabelas
+conferido, com somente metadados legítimos de login/logout/auditoria e FAQ novo.
 Limitações estão em `docs/STATUS-20261019.md` e na Central de Ajuda.
+
+Encerramento: QA completa GitHub `39263264558` aprovada, inclusive Chromium/WebKit.
+Código de produção validado em `23a1916`; documentação de entrega atualizada após
+a conferência. Nenhuma pendência de publicação ou restauração de dados permanece.
