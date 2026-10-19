@@ -4,10 +4,10 @@ async function login(page){await page.goto(url+'/login');await page.locator('inp
 for(const width of [390,768,1920])for(const theme of ['dark','light'])test(`admin responsivo ${width} / ${theme}`,async({page})=>{
  const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.setViewportSize({width,height:1080});await page.addInitScript({path:require.resolve('axe-core')});await page.addInitScript(theme=>localStorage.setItem('radar-theme',theme),theme);await login(page);
  const choose=async name=>{if(width<=1100)await page.getByRole('button',{name:'Abrir menu administrativo'}).click();await page.getByRole('navigation').getByRole('button',{name,exact:true}).click();};
- await expect(page.locator('.ad-metrics')).toContainText('96');
+ await expect(page.locator('.radar-admin-metrics')).toContainText('96');
  for(const name of ['Site e aparência','Contas e acessos','Operação e relatórios','Captação automática','Integrações','Central de Ajuda','Banco e manutenção','Histórico administrativo']){
   await choose(name);expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
-  const violations=await page.evaluate(async()=> (await axe.run(document.querySelector('.ad-main'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa']}})).violations.filter(x=>['serious','critical'].includes(x.impact)));expect(violations).toEqual([]);
+  const violations=await page.evaluate(async()=> (await axe.run(document.querySelector('.radar-admin-main'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa']}})).violations.filter(x=>['serious','critical'].includes(x.impact)));expect(violations).toEqual([]);
  }
  await choose('Site e aparência');await expect(page.getByLabel('Nome do site')).toBeVisible();await page.screenshot({path:`test-results/admin-${width}-${theme}.png`,fullPage:true});expect(errors).toEqual([]);
 });

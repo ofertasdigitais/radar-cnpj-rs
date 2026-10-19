@@ -32,12 +32,12 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 body[data-view] {
   background-image: radial-gradient(ellipse at 90% 0, #da16400b, transparent 55%);
 }
-:is(.ov-panel,.ov-toolbar,.crm-board,.bi-panel,.ad-card,.help-article,.help-category,.discovery-panel) {
+:is(.ov-panel,.ov-toolbar,.crm-board,.bi-panel,.radar-admin-card,.help-article,.help-category,.discovery-panel) {
   border-color: var(--rp-border);
   background-image: linear-gradient(135deg, #ffffff04, transparent 65%);
   box-shadow: var(--rp-depth);
 }
-:is(.portfolio-lead,.company-preview-card,.ov-metric,.ad-metrics article,.crm-kpis article) {
+:is(.portfolio-lead,.company-preview-card,.ov-metric,.radar-admin-metrics article,.crm-kpis article) {
   border-color: var(--rp-border);
   border-radius: 12px;
   box-shadow: var(--rp-depth);
@@ -45,8 +45,8 @@ body[data-view] {
 :is(.portfolio-lead,.company-preview-card) {
   background-image: linear-gradient(145deg, #ffffff05, transparent 70%);
 }
-:is(.ov-metric,.crm-kpis article,.ad-metrics article) { position: relative; }
-:is(.ov-metric,.crm-kpis article,.ad-metrics article)::after {
+:is(.ov-metric,.crm-kpis article,.radar-admin-metrics article) { position: relative; }
+:is(.ov-metric,.crm-kpis article,.radar-admin-metrics article)::after {
   content: ''; pointer-events: none; position: absolute; top: 0; left: 18px; right: 18px;
   height: 1px; background: linear-gradient(90deg, transparent, #f1286155, transparent);
 }
@@ -54,7 +54,7 @@ body[data-view] {
   background: radial-gradient(ellipse at 90% 0, #ff72963b, transparent 65%), linear-gradient(120deg,#a80d36,#d7144b);
   border-color: #e54c76; box-shadow: 0 8px 25px #b3093829, inset 0 1px 0 #ffffff30;
 }
-:is(.ov-metric>strong,.crm-kpis strong,.ad-metrics strong,#bi .kpi>strong,.portfolio-lead-values b) {
+:is(.ov-metric>strong,.crm-kpis strong,.radar-admin-metrics strong,#bi .kpi>strong,.portfolio-lead-values b) {
   font-variant-numeric: tabular-nums lining-nums;
   letter-spacing: -.035em;
 }
@@ -80,29 +80,29 @@ body[data-view] {
 #bi .radar-chart-table summary { cursor: pointer; }
 #bi .radar-chart-table table { margin-top: 12px; }
 #bi .radar-chart-table td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
-:is(.primary,.ad-button.primary,.help-app .help-primary,.discovery-primary,#overviewRoot .ov-button.ov-primary) {
+:is(.primary,.radar-admin-button.primary,.help-app .help-primary,.discovery-primary,#overviewRoot .ov-button.ov-primary) {
   background: linear-gradient(165deg,#dd2052,#bb0d3a);
   border: 1px solid #e64872; color: #fff;
   box-shadow: 0 3px 0 #7d0c2b, 0 6px 14px #bd0c3820, inset 0 1px 0 #ffffff26;
 }
-:is(.secondary,.ad-button:not(.primary),#overviewRoot .ov-button:not(.ov-primary),.radar-quick-nav) {
+:is(.secondary,.radar-admin-button:not(.primary),#overviewRoot .ov-button:not(.ov-primary),.radar-quick-nav) {
   box-shadow: var(--rp-control-depth);
 }
-:is(.primary,.secondary,.ad-button,.help-app button,#overviewRoot .ov-button,.discovery-primary,.portfolio-lead-actions button) {
+:is(.primary,.secondary,.radar-admin-button,.help-app button,#overviewRoot .ov-button,.discovery-primary,.portfolio-lead-actions button) {
   transition: background-color .16s, border-color .16s, box-shadow .16s, transform .16s;
 }
-:is(.primary,.ad-button.primary,.help-app .help-primary,#overviewRoot .ov-button.ov-primary):disabled {
+:is(.primary,.radar-admin-button.primary,.help-app .help-primary,#overviewRoot .ov-button.ov-primary):disabled {
   box-shadow: none; transform: none; cursor: not-allowed;
 }
-:is(.primary,.ad-button.primary,.help-app .help-primary,#overviewRoot .ov-button.ov-primary):active:not(:disabled) {
+:is(.primary,.radar-admin-button.primary,.help-app .help-primary,#overviewRoot .ov-button.ov-primary):active:not(:disabled) {
   transform: translateY(1px); box-shadow: inset 0 2px 4px #51051b33;
 }
 .sidebar { background-image: linear-gradient(160deg,#b61a3e0b,transparent 40%); }
 .primary-navigation .nav-item.active {
   box-shadow: inset 3px 0 #de164b, 0 3px 10px #0002;
 }
-body[data-view] .topbar,.ad-topbar { box-shadow: 0 2px 12px #0000000c; }
-.content :is(input,select,textarea),.ad-content :is(input,select,textarea) {
+body[data-view] .topbar,.radar-admin-topbar { box-shadow: 0 2px 12px #0000000c; }
+.content :is(input,select,textarea),.radar-admin-content :is(input,select,textarea) {
   box-shadow: inset 0 1px 2px #00000008;
 }
 .access-story {
@@ -118,7 +118,7 @@ body[data-view] .topbar,.ad-topbar { box-shadow: 0 2px 12px #0000000c; }
 }
 .access-entry footer { font-size: 13px; }
 @media (hover:hover) and (prefers-reduced-motion:no-preference) {
-  :is(.primary,.ad-button.primary,#overviewRoot .ov-button.ov-primary):hover:not(:disabled) {
+  :is(.primary,.radar-admin-button.primary,#overviewRoot .ov-button.ov-primary):hover:not(:disabled) {
     background: linear-gradient(160deg,#e42b60,#c21143); transform: translateY(-1px);
     box-shadow: 0 4px 0 #7d0c2b, 0 9px 18px #bd0c3830, inset 0 1px 0 #ffffff26;
   }
@@ -147,7 +147,7 @@ body[data-view] .topbar,.ad-topbar { box-shadow: 0 2px 12px #0000000c; }
   *,*::before,*::after { transition:none!important; animation:none!important; scroll-behavior:auto!important; }
 }
 @media print {
-  :is(.ov-panel,.bi-panel,.ad-card,.portfolio-lead,.company-preview-card,.ov-metric) { box-shadow:none; }
+  :is(.ov-panel,.bi-panel,.radar-admin-card,.portfolio-lead,.company-preview-card,.ov-metric) { box-shadow:none; }
 }
 
 /* Structural controls must not inherit ripple clipping or theme fallbacks. */
@@ -177,7 +177,7 @@ body[data-view] .radar-quick-nav kbd { margin-left:2px; flex:none; }
   .radar-header-more { display:block; }
   body[data-view] .topbar .discovery-bell { overflow:visible; position:relative; justify-content:center; }
   .topbar .discovery-bell b { position:absolute; top:-4px; right:-4px; min-width:18px; padding:2px 4px; font-size:10px; }
-  .content :is(input,select,textarea), .team-editor-grid :is(input,select,textarea), .discovery-dialog :is(input,select,textarea), .ad-content :is(input,select,textarea) { font-size:16px!important; }
+  .content :is(input,select,textarea), .team-editor-grid :is(input,select,textarea), .discovery-dialog :is(input,select,textarea), .radar-admin-content :is(input,select,textarea) { font-size:16px!important; }
   #bi :is(.segmented button,.bi-controls button,.bi-controls select), .companies-section .open-detail { min-height:44px; }
   .sidebar .primary-navigation { mask-image:none; -webkit-mask-image:none; }
 }
